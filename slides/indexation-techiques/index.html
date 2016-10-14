@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Developer Paradise - Magento 2.0: Indexation techniques for high performance</title>
+
+    <meta name="description" content="Magento 2.0: Indexation techniques for high performance">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+  <div class="slides">
+        <section>
+            <h1>Magento 2.0</h1>
+            <h2>Indexation techniques for high performance</h2>
+            <p>&nbsp;</p>
+            <p align="right">by Ivan Chepurnyi</p>
+        </section>
+        
+        <section>
+        	<h2>What is a Magento Index?</h2>
+            <aside class="notes">
+            	<p>Ask audience about their view on Magento Indexes</p>
+            </aside>
+        </section>
+        
+        <section>
+        	<h3>Magento Index</h3>
+        	<ul>
+            	<li class="fragment">Represented as a separate table</li>
+            	<li class="fragment">Optimized for retrieval, filtration and/or sorting.</li>
+            	<li class="fragment">Just a snapshot of data at some point in time.</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h2>When to create it?</h2>
+            <aside class="notes">
+            	<p>Data Filtration</p>
+                <p>Data Sorting</p>
+                <p>Complex Logic Caching</p>
+            </aside>
+        </section>
+     
+        <section>
+        	<h3>Data Filtration</h3>
+        	<ul>
+            	<li class="fragment">Product Visibility</li>
+                <li class="fragment">Product Status</li>
+                <li class="fragment">Category Relation</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h3>Data Sorting</h3>
+            <ul>
+            	<li class="fragment">Category Position</li>
+                <li class="fragment">Bestsellers</li>
+                <li class="fragment">Stock Quanttities</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h3>Complex Logic Cache</h3>
+            <ul>
+            	<li class="fragment">Stock Availability</li>
+                <li class="fragment">Product Price</li>
+                <li class="fragment">Anchor Category Relation</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h2>When do NOT to use them?</h2>
+        </section>
+        
+        <section>
+        	<h3>For Data Retrieval</h3>
+            <p class="fragment">It does not make sense to flatten EAV structure for retrieval</p>
+            <aside class="notes">
+   	    		<p>EAV Data can be retrieved more efficiently by identifier</p>
+                <p>Overloading flat table with does not make data retrieval faster</p>
+            </aside>
+        </section>
+        
+        <section>
+        	<h3>When Accurate Data is Critical</h3>
+            <p class="fragment">Using price or stock index in shopping cart is a bad idea</p>
+            <aside class="notes">
+            	<p>Price or stock may change at any time</p>
+                <p>In shopping cart we always work with known identifiers, that is usually less than 100.</p>
+            </aside>
+        </section>
+        
+        <section>
+     	   <h3>High Availability Indexation Challanges</h3>
+      	</section>
+      
+      	<section>   
+      	   <h3>Table locks</h3>
+           <p>Index generation can create a lock on table you don't expect</p>
+          <pre class="fragment"><code class="sql" data-trim>
+UDPATE some_index_table index 
+    INNER JOIN catalog_product_entity_varchar product_data ON ... 
+    	SET index.some_value = product_data.value
+           </code></pre>
+        </section>
+        
+        <section>
+        	<h3>Solution</h3>
+            <ul>
+            	<li class="fragmented">Avoid cross table updates on live tables</li>
+                <li class="fragmented">Create snapshot of data for your index</li>
+            </ul>
+        </section>
+        
+    	<section>
+           <h3>MySQL Memory</h3>
+           <p>MySQL memory consuption is increasing with amount of records you need to update.</p>
+           <p class="fragment">These are known MySQL serial killers:</p>
+       
+          <pre class="fragment"><code class="sql" data-trim>INSERT INTO .. SELECT ... FROM</code></pre>
+          <pre class="fragment"><code class="sql" data-trim>UPDATE ... JOIN ... SET ...</code></pre>
+        </section>
+        
+        <section>
+            <h3>Solution</h3>
+            <p>Range your updates into smaller data-sets</p>
+        </section>
+        
+        <section>
+           <h3>Index Downtime</h3>
+           <p>During re-indexation there is a step when index table is locked and no data is available in it.</p>
+        </section>
+        
+       <section>
+            <h3>Solution</h3>
+            <ul>
+            	<li class="fragmented">Create two identical index tables</li>
+                <li class="fragmented">Re-index only one at a time</li>
+                <li class="fragmented">Switch one to use on the frontend via configuration model</li>
+            </ul>
+      </section>
+      
+      <section>
+          <h3>Did anyone created an indexer in Magento 1.x?</h3>
+          <p class="fragment">It was a nightmare comparing to Magento 2.0...</p>
+      </section>
+        
+      <section>
+   	    <h3>It is now incredibly simple...</h3>
+      </section>
+        
+       <section>
+        <h3>Only two configuration files required, and no event matching magic:</h3>
+        <p><code>indexer.xml</code> and <code>mview.xml</code></p>
+       </section>
+        
+        <section>
+        	<h3>mview.xml</h3>
+            <p class="fragment">Allows you to subscribe to changes in any table</p>
+            <p class="fragment"><code>Magento\Framework\Mview\ActionInterface</code></p>
+            <pre class="fragment"><code class="xml" data-trim>
+&lt;view id=&quot;mview_id&quot; class=&quot;MviewClass&quot; group=&quot;indexer&quot;&gt;
+    &lt;subscriptions&gt;
+        &lt;table name=&quot;table_to_check&quot; 
+                  entity_column=&quot;primary_key&quot; /&gt;
+    &lt;/subscriptions&gt;
+&lt;/view&gt;
+</code></pre>
+        </section>
+        
+        <section>
+        	<h2>Why is it called MView?</h2>
+            
+            <aside class="notes">
+            	<p>Oracle Materialized View</p>
+                <p>In Magento MView is a PHP based realization with triggers</p>
+            </aside>
+        </section>
+        
+        <section>
+        	<h3>indexer.xml</h3>
+            <p class="fragment">Just a regular Magento indexer definition</p>
+            <p class="fragment"><code>Magento\Framework\Indexer\ActionInterface</code></p>
+            <pre class="fragment"><code class="xml" data-trim>
+&lt;indexer id=&quot;indexer_code&quot; view_id=&quot;mview_code&quot; 
+	class=&quot;YourIndexerClass&quot;&gt;
+    &lt;title translate=&quot;true&quot;&gt;Your Title&lt;/title&gt;
+    &lt;description translate=&quot;true&quot;&gt;Your Description&lt;/description&gt;
+&lt;/indexer&gt;
+</code></pre>
+    </section>
+    
+    <section>
+        <p>So how to implement HA index in Magento 2.0?</p>
+    </section>
+    
+    <section>
+        <p>I really like re-usable components</p>
+        <p class="fragment">So I come up with such indexer structure</p>
+    </section>
+        
+        <section>
+        	<img src="component-relation.svg" alt="Component Relation" class="plain" width="100%" height="100%" />
+            <aside class="notes">
+            	<ul>
+                	<li>Indexer Action and MView actions are just adapters for Magento, they receive Indexer as dependency</li>
+                    <li>Indexer is our main external actor</li>
+                    <li>Index has dependency on Index Processor</li>
+                    <li>Index Processor - process indexer requests, saves metadata</li>
+                    <li>Index Processor depends on Index Metadata, List Generator and Data Generator</li>
+                    <li>List Generator - creates index identifiers</li>
+                    <li>Data Generator - creates index data based on generated identifiers</li>
+                    <li>Index Metadata - stores information about index table names</li>
+                    <li>List Generator and Data Generator depend on Table Builder</li>
+                    <li>Table Builder - creates tables for generators</li>
+                </ul>
+            </aside>
+      </section>
+        
+      <section>
+        	<h3>Indexer</h3>
+            <ul>
+            	<li class="fragment">Generic interface for usage in MView and Indexer Action</li>
+            	<li class="fragment">Has knowledge about the index structure</li>
+                <li class="fragment">Creates index conditions for processor</li>
+            </ul>
+        </section>
+        
+        <section>
+          <h3>Sample Interface</h3>
+          <pre><code class="php" data-trim>
+interface IndexerInterface
+{
+    public function executeFull();
+
+    public function executeByIds(array $ids);
+}
+</code></pre>
+        </section>
+        
+        <section>
+       	  <h3>List Generator</h3>
+            <ul>
+            	<li class="fragment">Creates fundation for our indexer</li>
+            	<li class="fragment">Consists mostly from entity identifiers</li>
+            </ul>
+      </section>
+        
+        <section>
+        <h3>Sample Interface</h3>
+        <pre><code class="php" data-trim>
+use Magento\Framework\Db\Ddl\Table;
+
+interface ListGeneratorInterface
+{
+    /**
+     * @return Table
+     */
+    public function generate(ConditionInterface $condition);
+}
+</code></pre>
+        </section>
+        
+        <section>
+        	<h3>Index Condition</h3>
+            <ul>
+            	<li class="fragment">Decouples creation and applying of condition</li>
+            </ul>
+        </section>
+        
+        <section>
+        <h3>Sample Interface</h3>
+        <pre><code class="php" data-trim>
+use Magento\Framework\DB\Select;
+
+interface ConditionInterface
+{
+    public function apply(
+        Select $select, 
+        $alias, 
+        array $columnMap = []
+    );
+}
+</code></pre>
+        </section>
+        
+        <section>
+        	<h3>Data Generator</h3>
+            <ul>
+            	<li class="fragment">Creates final subset of index data</li>
+            	<li class="fragment">Data is based on List Generator data</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h3>Sample Interface</h3>
+        	<pre><code class="php" data-trim>
+interface DataGeneratorInterface
+{
+    /**
+     * @return Table
+     */
+    public function generate(Table $listTable);
+}
+</code></pre>
+        </section>
+        
+        
+        <section>
+        	<h3>Index Processor</h3>
+            <ul>
+            	<li class="fragment">Recieves list of index conditions from indexer</li>
+                <li class="fragment">Decides how to populate an index table</li>
+                <li class="fragment">Toggles index table via metadata instance</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h3>Sample Interface</h3>
+        	<pre><code class="php" data-trim>
+interface ProcessorInterface
+{
+    public function process($conditions, $live = false);
+}
+</code></pre>
+        </section>
+        
+        <section>
+        	<h3>Index Metadata</h3>
+            <ul>
+            	<li class="fragment">Controls which table to use for indexer and which for frontend</li>
+                <li class="fragment">Should be used in your entity repository to filter data by it</li>
+                <li class="fragment">Provides usefull attribute information</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h3>Sample Interface</h3>
+        	<pre><code class="php" data-trim>interface MetadataInterface
+{
+    public function getTableToIndex($live = false);
+
+    public function getIndexTable();
+
+    public function toggleTable();
+
+    public function getAttributesInfo($entityType, $attributeCodes);
+}
+</code></pre>
+        </section>
+        
+        <section>
+        	<h3>Real Index Example</h3>
+            <p class="fragment">Created in 3 hours during the workshop on the first <a href="http://developer-paradise.com">#DevParadise</a> day</p>
+            <p class="fragment"><a href="http://bit.ly/m2-boilerplate">http://bit.ly/m2-boilerplate</a></p> 
+        </section>
+       
+        <section>
+        	<h2>Want to learn more about these techniques?</h2>
+            <p>Catch me at coffee break or during after party!</p>
+        </section>
+        
+        <section>
+            <h1 class="fragment current-visible" data-fragment-index="1">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+        </section>
+    </div>
+</div>
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+	
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+	
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});	
+	});
+</script>
+
+</body>
+</html>

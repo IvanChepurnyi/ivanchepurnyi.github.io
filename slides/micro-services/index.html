@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>MageTitansUSA 2016 - Creating Micro-Services for Magento 2.0 Performance</title>
+
+    <meta name="description" content="Creating Micro-Services for Magento 2.0 Performance">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+	<style type="text/css">
+	section .large {
+	font-size: 1.5em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+	</style>
+</head>
+
+<body>
+
+<div class="reveal">
+
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+        <section>
+          <img src="/images/logo-icon.svg" width="21%" class="plain" style="position: absolute; top: 30%; left:5%"/>
+          <h1 align="left" style="position: absolute; top: 32%; right: 5%; font-size: 2.12em;">Micro-Services</h1>
+          <h2 align="left" style="position: absolute; top: 50%; right: 5%; font-size: 1.23em; color: darkblue;">Magento 2.0 Performance</h2>
+          <p style="position:absolute;top: 60%; right: 5%">by Ivan Chepurnyi</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+        </section>        
+        
+        <section>
+        	<h2>About Me</h2>
+            <ul>
+            	<li class="fragment">One of lucky former members of Magento 1.x Core Team</li>
+				<li class="fragment">I love to optimize performance</li>
+                <li class="fragment">I give trainings and independent consultancy</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p class="large">Let's talk about PHP APP evolution</p>
+        </section>
+        
+        <section>
+        	<p class="large">All started from the good old Apache's mod_php</p>
+        </section>
+        
+        <section>
+        	<p class="large">mod_php</p>
+        	<img src="images/php-cgi-mod-php.svg" class="stretch plain" />
+        </section>
+        
+        <section>
+        	<h2>Drawbacks</h2>
+            <ul>
+            	<li class="fragment">Dynamic server processes was not limited</li>
+                <li class="fragment">PHP process is alive unless all bytes transfered to a remote connection</li>
+                <li class="fragment">Every new PHP process takes time to start</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p>Who is still running mod_php on production?</p>
+        </section>
+        
+        <section>
+        	<p>Then started an era of PHP-FPM</p>
+        </section>
+        
+        <section>
+        	<p class="large">PHP-FPM</p>
+        	<img src="images/php-fpm.svg" class="stretch plain" />
+        </section>
+        
+        <section>
+        	<h2>Drawback</h2>
+            <div class="fragment">Not controlling your memory usage, might results in memory over-usage by one of the processes</div>
+        </section>
+        
+        <section>
+          <p class="large">Now the era of async I/O PHP apps is emerging...</p>
+        </section>
+        
+        <section>
+       	  <p class="large">Application Process Manager</p>
+       	  <img src="images/app-pm.svg" class="stretch plain" />
+        </section>
+        
+        <section> 
+        	<h2>Drawbacks</h2>
+            
+            <ul>
+            	<li class="fragment">You have to control used memory</li>
+                <li class="fragment">You have to ensure async IO on any operation</li>
+                <li class="fragment">If single line of code fails, all app crashes</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p class="large">Is it possible with Magento 2?</p>
+        </section>
+        
+        <section>
+        	<p class="large">The answer is micro-services...</p>
+        </section>
+        
+        <section>
+        	<p class="large">What is a micro-service?</p>
+        </section>
+        
+        <section>
+        	<p>Micro-service is a component that runs as a separate application</p>
+        </section>
+        
+        <section>
+        	<h4>Micro-service candidates in Magento 2.0</h4>
+        </section>
+        
+        <section>
+        	<h3>Sessions</h3>
+            <ul>
+            	<li class="fragment">Every page load requires I/O operation to cache storage</li>
+                <li class="fragment">Dynamic requests in Varnish bootstrap full application</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h3>Session Application</h3>
+            <img src="images/session-server.svg" class="stretch plain" />
+        </section>
+        
+        <section>
+        	<h3>Stock Processing</h3>
+            <ul>
+            	<li class="fragment">Every order place request requires database lock on stock table</li>
+            	<li class="fragment">You usually sacrifice stock integrity for performance reasons</li>
+            </ul>            
+        </section>
+        
+        <section>
+        	<h3>Stock Application</h3>
+            <p class="fragment">Live proof of concept demo</p>
+        </section>
+        
+        
+        <section>
+        	<h3>Quote (Shopping Carts)</h3>
+            <p class="fragment">Every change shopping cart is a write DB operation</p>
+        </section>
+        
+        <section>
+        	<h3>Quote Application</h3>
+            <ul>
+            	<li class="fragment">Store quotes in memory</li>
+                <li class="fragment">Delayed DB syncronization</li>
+                <li class="fragment">Endless BI possibilities</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h3>Image resize</h3>
+            <ul>
+            	<li class="fragment">Images has to be resized sequentially</li>
+            	<li class="fragment">Cold image cache perfromance hit</li>
+            </ul>
+        </section>
+        
+        
+        <section>
+            <h3>Image Microservice</h3>
+            <ul>
+            	<li class="fragment">Image can be resized in parallel</li>
+            	<li class="fragment">Main Application can utilize Async I/O</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<h3>Learn More</h3>
+            <ul>
+            	<li>ReactPHP: <a href="http://reactphp.org/">http://reactphp.org/</a></li>
+            	<li>PHPFastCGI: <a href="http://phpfastcgi.github.io/">http://phpfastcgi.github.io/</a></li>
+            	<li>Sample counter server: <a href="http://bit.ly/counter-sample">http://bit.ly/counter-sample</a></li>
+            </ul>
+        </section>
+        
+    	<section>
+          <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+        </section>
+    </div>
+</div>
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+	
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+	
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});	
+	});
+</script>
+
+</body>
+</html>

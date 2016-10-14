@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Meet Magento SE - Magento 2: Layout and Code Compilation for Performance</title>
+
+    <meta name="description" content="Magento 2: Layout and Code Compilation for Performance">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+        <section>
+            <h1>Magento 2</h1>
+            <h2>Layout and Code Compilation for Performance</h2>
+            <p>&nbsp;</p>
+            <p align="right">by Ivan Chepurnyi</p>
+        </section>
+
+        <section>
+            <h2>What? <span class="fragment" data-fragment-index="1">Compilation?</span></h2>
+            <aside class="notes">
+                <ul>
+                    <li>What the heck compilation?</li>
+                    <li>Are we talking about machine code compilation?</li>
+                    <li>Are we talking about HHVM?</li>
+                    <li>No! We are going to talk about compiling php code into php code!</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section>
+            <h2>
+                <span class="fragment" data-fragment-index="1">Complex</span>
+                <span class="fragment semi-fade-out" data-fragment-index="1">Simple</span> algorithms
+            </h2>
+            <aside class="notes">
+                <ol>
+                    <li>We like our code being simple, flexible, easy to re-use.</li>
+                    <li>But does it make it simple for interpreter?</li>
+                </ol>
+            </aside>
+        </section>
+
+        <section>
+            <h2>What makes them complex?</h2>
+        </section>
+
+        <section>
+            <h2>Repeated data processing</h2>
+            <pre><code class="hljs php" data-trim>
+// ... some xml/json/yaml file initialization
+foreach ($loadedData as $item) {
+    $this-&gt;process($item);
+}</code></pre>
+            <aside class="notes">
+                <ul>
+                    <li>Read configuration files to bootstrap the application state</li>
+                    <li>Read layout files to render the page</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section>
+            <h2>Nested loops</h2>
+            <pre><code class="hljs php" data-trim>
+foreach ($data as $item) {
+    $row = [];
+    foreach ($columns as $column) {
+       $row[] = $column-&gt;export($item);
+    }
+    $csv->write($row);
+}</code></pre>
+            <aside class="notes">
+                <ol>
+                    <li>Did anyone experience slowdown because of nested foreach loops?</li>
+                </ol>
+            </aside>
+        </section>
+
+        <section>
+            <h2>Complex dependency tree</h2>
+            <pre><code class="hljs php" data-trim>
+class ClassOne
+{
+     public function __construct(ClassTwo $dependency) {}
+}
+
+class ClassTwo
+{
+    public function __construct(ClassThree $dependency) {}
+}
+
+class ClassThree
+{
+    public function __construct(ClassFour $dependencyOne, ClassFive $dependencyTwo) {}
+}
+
+// ..
+</code></pre>
+            <aside class="notes">
+                <p>When we have dependency, that dependency has another dependency and that another dependency has another dependency as well</p>
+                <p>Dependency Injection container has to lookup all those dependency by running into recursion loops.</p>
+            </aside>
+        </section>
+
+        <section>
+            <h2>How can we solve it?</h2>
+        </section>
+
+        <section>
+            <h2>Repeated data processing</h2>
+
+            <p>Translate your XML/JSON/YAML file into executable PHP code and include it when you need processed structure</p>
+        </section>
+
+        <section>
+            <h2>Nested loops</h2>
+
+            <p>Pre-compile second loop and execute it within the main one</p>
+        </section>
+
+        <section>
+            <h2>Complex dependency tree</h2>
+
+            <p>Resolve dependencies and compile resolution into executable code</p>
+
+            <aside class="notes">
+                <ol>
+                    <li>It will let DI container simply include resolved arguments, instead of fetching data from configuration</li>
+                </ol>
+            </aside>
+        </section>
+
+        <section>
+            <h2>But compilation looks ugly...</h2>
+
+            <ul>
+                <li class="fragment">You need to create PHP code within PHP code</li>
+                <li class="fragment">You need to write it to external file</li>
+                <li class="fragment">You need to include that file inside of your code</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>I was looking for a library</h2>
+            <p class="fragment">Didn't find one... <span class="fragment">So I wrote it myself.</span></p>
+        </section>
+
+        <section>
+            <h2>EcomDev\Compiler</h2>
+
+            <ul>
+                <li>Created to wrap writing PHP code within PHP</li>
+                <li>Automatically stores compiled code</li>
+                <li>Automatically validates source and re-compiles code when needed</li>
+                <li>Provides easy to use API to create parsers, builders and executors</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Installation</h2>
+            <ol>
+                <li>Available as a composer dependency
+                    <pre><code class="hljs bash">composer require "ecomdev/compiler"</code></pre>
+                </li>
+                <li>Instantiate it directly or via DI container.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Some examples</h2>
+        </section>
+
+        <section>
+            <section>
+                <h2>Compile XML into PHP</h2>
+            </section>
+
+            <section>
+                <h2>XML file</h2>
+            <pre><code class="hljs xml" data-trim>
+&lt;objects&gt;
+    &lt;item id=&quot;object_one&quot; type=&quot;object&quot; /&gt;
+    &lt;item id=&quot;object_two&quot; type=&quot;object&quot; /&gt;
+    &lt;item id=&quot;object_three&quot; type=&quot;object&quot; /&gt;
+    &lt;type id=&quot;object&quot; class=&quot;Some\ClassName&quot;/&gt;
+&lt;/objects&gt;</code></pre>
+                <aside class="notes">
+                    <p>Imagine you have such a structure.</p>
+                    <p>Each item should return you a new instance of registered type object.</p>
+                </aside>
+            </section>
+
+            <section>
+            <h2>Parser</h2>
+            <pre><code class="hljs php" data-trim>
+use EcomDev\Compiler\Statement\Builder;
+
+class Parser implements EcomDev\Compiler\ParserInterface
+{
+    // .. constructor with builder as dependency
+    public function parse($value)
+    {
+        $xml = simplexml_load_string($value);
+        $info = $this->readXml($xml);
+        return $this->getPhpCode($info, $this->builder);
+    }
+    // .. other methods
+}
+</code></pre>
+            </section>
+            <section>
+                <h3>Parse xml data</h3>
+<pre><code class="hljs php" data-trim>
+private function readXml($xml)
+{
+    $info = [];
+    foreach ($xml->children() as $node) {
+        if ($node->getName() === 'type') {
+            $info['types'][(string)$node->id] = (string)$node->class;
+        } elseif ($node->getName() === 'object') {
+            $info['objects'][(string)$node->id] = (string)$node->type;
+        }
+    }
+
+    return $info;
+}
+</code></pre>
+            </section>
+            <section>
+                <h3>Create PHP code</h3>
+                <pre><code class="hljs php" data-trim>
+private function getPhpCode($info, $builder) {
+    $compiledArray = [];
+
+    foreach ($info['objects'] as $objectId => $type) {
+        $compiledArray[$objectId] = $builder->instance($info['types'][$type]);
+    }
+
+    return $builder->container(
+        $builder->returnValue($compiledArray)
+    );
+}
+                </code></pre>
+            </section>
+            <section>
+            <h2>Compiled PHP File</h2>
+<pre><code class="hljs php" data-trim>
+return [
+    'object_one' => new Some\ClassName(),
+    'object_two' => new Some\ClassName(),
+    'object_three' => new Some\ClassName()
+];
+</code></pre>
+            </section>
+
+        </section>
+        <section>
+            <section>
+                <h3>Nested Loop Simplifying</h3>
+                <aside class="notes">
+                    <p>In this case you cannot use parser, you need to use static source</p>
+                </aside>
+            </section>
+
+            <section>
+                <h3>Your constructor</h3>
+<pre><code class="hljs php" data-trim>
+public function __construct(
+    EcomDev\Compiler\Builder $builder,
+    EcomDev\Compiler\Compiler $compiler)
+{
+    $this->builder = $builder;
+    $this->compiler = $compiler;
+}
+</code></pre>
+            </section>
+
+            <section>
+                <h3>Export method</h3>
+<pre><code class="hljs php" data-trim>
+public function export($data, $columns)
+{
+    $statements = $this->compileColumns($columns, $this->builder);
+
+    $source = new \EcomDev\Compiler\Source\StaticData(
+        'your_id', 'your_checksum', $statements
+    );
+
+    $reference = $this->compiler->compile($source);
+    $closure = $this->compiler->interpret($reference);
+
+    foreach ($data as $item) {
+       $row = $closure($item, $columns);
+    }
+}
+</code></pre>
+            </section>
+
+            <section>
+                <h3>Compilation method</h3>
+<pre><code class="hljs php" data-trim>
+public function compileColumns($columns, $builder)
+{
+    $item = $builder->variable('item');
+
+    $compiledArray = [];
+    foreach ($columns as $id => $column) {
+        $compiledArray[] = $builder->chainVariable('columns')[$id]
+                                ->export($item);
+    }
+
+    $closure = $builder->closure(
+        [$item, $builder->variable('columns')],
+        $builder->container([$builder->returnValue($compiledArray)])
+    );
+
+    return $builder->container([$builder->returnValue($closure)]);
+}
+</code></pre>
+            </section>
+
+            <section>
+                <h3>Result</h3>
+<pre><code class="hljs php" data-trim>
+return function ($item, $columns) {
+    return [
+        $columns['id1']->export($item),
+        $columns['id2']->export($item),
+        $columns['id3']->export($item),
+        // ...
+    ];
+};
+</code></pre>
+            </section>
+        </section>
+
+        <section>
+            <h2>Main Components</h2>
+
+            <ul>
+                <li><strong>CompilerInterface</strong> - Compiler instance</li>
+                <li><strong>StorageInterface</strong> - Stores compiled files</li>
+                <li><strong>SourceInterface</strong> - Provider of data (File, String, StaticData)</li>
+                <li><strong>ParserInterface</strong> - Parser of data</li>
+                <li><strong>ObjectBuilderInterface</strong> - Bound builder for included files</li>
+            </ul>
+
+            <aside class="notes">
+                <ul>
+                    <li>Compiler is our master wrapper object</li>
+                    <li>Storage is keeping track of compiled files and stores them</li>
+                    <li>Object builder is an object that will be used as $this variable in your generated files.
+                        You can implement own one if you want to access particular internal methods.</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section>
+            <h2>And some sweet stuff...</h2>
+        </section>
+
+        <section>
+            <h2>Exportable Objects</h2>
+
+            <pre class="fragment"><code class="hljs php" data-trim>
+class SomeClass implements EcomDev\Compiler\ExportableInterface
+{
+    public function __construct($foo, $bar) { /* */ }
+
+    public function export() {
+        return [
+            'foo' => $this->foo,
+            'bar' => $this->bar
+        ];
+    }
+}
+            </code></pre>
+            <p class="fragment">Will be automatically compiled into:</p>
+            <pre class="fragment"><code class="hljs php" data-trim>
+new SomeClass('fooValue', 'barValue');
+            </code></pre>
+            <aside class="notes">
+                <p>It even does not matter what order of arguments you are using,
+                    it will resolve constructor variable names</p>
+            </aside>
+        </section>
+
+        <section>
+            <h1>Magento 2.0</h1>
+            <h2>Layout Compilation is a must</h2>
+        </section>
+        <section>
+            <section>
+                <h2>Why? <span class="fragment">Because of its algorithm</span></h2>
+            </section>
+
+            <section>
+                <h2>Layout caching</h2>
+                <p>Every handle that is added to the <strong>Magento\Framework\View\Result</strong> changes the cache key for the whole generated structure.</p>
+            </section>
+
+            <section>
+                <h2>Layout generation</h2>
+                <p>Scheduled structure is generated from XML object at all times</p>
+            </section>
+
+            <section>
+                <h2>Solution</h2>
+                <p>1. Make every handle a compiled php code</p>
+                <p>2. Include compiled handles at loading phase</p>
+            </section>
+
+            <section>
+                <h2>Good news</h2>
+                <p>I am already working on it</p>
+                <p class="fragment">Will be release in April 2016</p>
+            </section>
+        </section>
+
+        <section align="left">
+            <h3>GitHub</h3>
+            <h4>Compiler Library for M2</h4>
+            <p><a href="https://github.com/EcomDev/compiler">https://github.com/EcomDev/compiler</a></p>
+            <h4>Layout Compiler for M1</h4>
+            <p><a href="https://github.com/EcomDev/EcomDev_LayoutCompiler">https://github.com/EcomDev/EcomDev_LayoutCompiler</a></p>
+            <h4>Layout Compiler for M2</h4>
+            <p>Coming soon</p>
+        </section>
+
+        <section>
+            <h1 class="fragment current-visible" data-fragment-index="1">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+        </section>
+    </div>
+</div>
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+	
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+	
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});	
+	});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Meet Magento NL 2016 - M* Performance: Know your database</title>
+
+    <meta name="description" content="M* Performance: Know your database">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+
+	<style type="text/css">
+	section .large {
+	font-size: 1.5em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+	</style>
+</head>
+
+<body>
+
+<div class="reveal">
+
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+        <section>
+          <img src="/images/logo-icon.svg" width="21%" class="plain" style="position: absolute; top: 30%; left:5%"/>
+          <h1 align="left" style="position: absolute; top: 32%; right: 5%; font-size: 2.01em;">M* Performance</h1>
+          <h2 align="left" style="position: absolute; top: 46%; right: 5%; color: darkblue;">Know your database</h2>
+          <p style="position:absolute;top: 55%; right: 5%">by Ivan Chepurnyi</p>
+          <p style="position:absolute;bottom: 0%; right: 5%"><small>* - Applicable for M2, M1 and MySQL</small></p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+        </section>        
+        
+        <section>
+        	<h2>About Me</h2>
+            <ul>
+            	<li class="fragment">One of lucky former members of Magento 1.x Core Team</li>
+				<li class="fragment">I love to optimize performance</li>
+                <li class="fragment">I give trainings and architectural advisories</li>
+            </ul>
+        </section>
+        
+        <section>
+          <h2>This presentation may contain some boring numbers</h2>
+          <p class="fragment">So if you don't like the boring numbers, just ignore them :)</p>
+        </section>
+        
+        <section>
+        	<p class="large">Majority of all bottlenecks in PHP applications are coming from interactions with database</p>
+        </section>
+        
+        
+        <section>
+          <p class="large">So we need to give some</p>
+          <p class="x-large"> ❤️ </p>
+          <p class="large">MySQL</p>
+        </section>
+        
+        <section>
+        	<p class="large">MySQL is just an application</p>
+            <ul>
+	            <li class="fragment">It uses RAM</li>
+                <li class="fragment">It needs CPU</li>
+                <li class="fragment">And it has feelings...</li>
+            </ul>
+        </section>
+        
+    <section>
+          <p>So we need to stop executing queries like this on big databases on every customer request...</p>  
+          <pre><code class="sql stretch"  data-trim>
+SELECT `main`.`entity_id`,
+      IF(attribute_is_active_scope.value_id IS NOT NULL, attribute_is_active_scope.value, attribute_is_active_default.value) AS `is_active`,  
+      `attribute_firstname_default`.`value` AS `firstname`, 
+      `attribute_lastname_default`.`value` AS `lastname`, 
+      /* ... ommited */
+    INNER JOIN `entity_int` AS `attribute_is_active_default` ON attribute_is_active_default.entity_id = main.entity_id AND attribute_is_active_default.attribute_id = '15' AND attribute_is_active_default.scope_id = 0
+	LEFT JOIN `entity_int` AS `attribute_is_active_scope` ON attribute_is_active_default.entity_id = attribute_is_active_scope.entity_id AND attribute_is_active_default.attribute_id = attribute_is_active_scope.attribute_id AND attribute_is_active_scope.scope_id = '1'
+    INNER JOIN `entity_varchar` AS `attribute_firstname_default` ON attribute_firstname_default.entity_id = main.entity_id AND attribute_firstname_default.attribute_id = '1' AND attribute_firstname_default.scope_id = 0
+    INNER JOIN `entity_varchar` AS `attribute_lastname_default` ON attribute_lastname_default.entity_id = main.entity_id AND attribute_lastname_default.attribute_id = '2' AND attribute_lastname_default.scope_id = 0
+    INNER JOIN `entity_varchar` AS `attribute_email_default` ON attribute_email_default.entity_id = main.entity_id AND attribute_email_default.attribute_id = '5' AND attribute_email_default.scope_id = 0
+    INNER JOIN `entity_varchar` AS `attribute_country_default` ON attribute_country_default.entity_id = main.entity_id AND attribute_country_default.attribute_id = '9' AND attribute_country_default.scope_id = 0
+    LEFT JOIN `entity_varchar` AS `attribute_country_scope` ON attribute_country_default.entity_id = attribute_country_scope.entity_id AND attribute_country_default.attribute_id = attribute_country_scope.attribute_id AND attribute_country_scope.scope_id = '1'
+    INNER JOIN `entity_datetime` AS `attribute_dob_default` ON attribute_dob_default.entity_id = main.entity_id AND attribute_dob_default.attribute_id = '7' AND attribute_dob_default.scope_id = 0 WHERE (IF(attribute_is_active_scope.value_id IS NOT NULL, attribute_is_active_scope.value, attribute_is_active_default.value) = 1)
+          </code></pre>
+        </section>
+        
+        <section>
+       	  <p class="large">This queries can eat all the RAM and bring your database server down</p>
+        </section>
+        
+        <section>
+        	<p class="large">MySQL performance tuning should start from optimizing slow queries</p>
+          <p class="fragment">Increasing RAM and buffer pool does not solve a problem</p>
+        </section>
+        
+        <section>
+       	  <p class="large">Optimization starts from simplifying your queries</p>
+        </section>
+        
+        <section>
+	        <h2>Ways to simplify your queries for MySQL</h2>
+			<ol>
+           	  <li>Separate JOINs into separate selects, that are based on main select primary key</li>
+                <li>Try to minimize JOIN conditions within simplified one</li>
+                <li>Create materialized index tables for filtration, instead of filters on join</li>
+                <li>Search for easy override priority for your case</li>
+            </ol>
+        </section>
+        
+        
+        
+        <section>
+ 			<h2>Different Data Retrieval Approaches</h2>
+            <canvas data-chart="bar" class="stretch" data-chart-src="chart/query.csv"></canvas>
+        </section>
+        
+        <section>
+        	<h2>Why Separate is better?</h2>
+            <ol>
+            	<li>It doesn't create a temporary table</li>
+				<li>It uses index instead of a table scan</li>
+				<li>It works with only small subset of data, instead of joining two million records tables</li>
+            </ol>
+        </section>
+        
+        <section>
+       	  <h2>How to make a separate query</h2>
+            <p class="fragment" data-fragment-index="1">Select identifiers</p>
+            <pre class="fragment" data-fragment-index="1"><code class="sql" data-trim>
+  SELECT entity_id FROM entity_flat 
+      WHERE is_active = 1 and store_id = 1 
+      LIMIT 0, 100</code></pre>
+      <p class="fragment" data-fragment-index="2">Select data</p>
+            <pre class="fragment" data-fragment-index="2"><code class="sql" data-trim>
+  SELECT entity_id, attribute_id, scope_id, value
+      FROM entity_varchar 
+      WHERE entity_id IN(1, 2, 3 ....) 
+UNION ALL
+SELECT entity_id, attribute_id, scope_id, value
+      FROM entity_decimal 
+      WHERE entity_id IN(1, 2, 3 ....)
+ORDER BY scope_id
+      </code></pre>
+        </section>
+        
+        <section>
+        	<h2>How about indexation?</h2>
+        </section>
+        
+        <section>
+           <h3>MySQL Memory</h3>
+           <p>MySQL memory consuption is increasing with amount of records you need to update.</p>
+           	  <p class="fragment">These are known MySQL serial killers:</p>
+    	  	  <pre class="fragment"><code class="sql" data-trim>INSERT INTO .. SELECT ... FROM</code></pre>
+	    	  <pre class="fragment"><code class="sql" data-trim>UPDATE ... JOIN ... SET</code></pre>
+        </section>
+        
+        <section>
+        	<h3>Ranged Queries to the Resque</h3>
+			<ol>
+            	<li>You just need to find min / max pair  and total number of primary key matches</li>
+                <li>Find your perfect batch size (~ 20k)</li>
+                <li>Execute same query by moving forward with batch size</li>
+            </ol>
+        </section>
+        
+        <section>
+            <h2>Single vs Ranged Approaches</h2>
+            <canvas data-chart="bar" class="stretch" data-chart-src="chart/flat.csv"></canvas>
+    	</section>
+        
+        <section>
+       	  <h2>How to make a ranged query</h2>
+            <p class="fragment" data-fragment-index="1">Select boundaries</p>
+            <pre class="fragment" data-fragment-index="1"><code class="sql" data-trim>
+  SELECT MIN(entity_id), MAX(entity_id)  FROM entity</code></pre>
+      <p class="fragment" data-fragment-index="2">Create ranged inserts</p>
+            <pre class="fragment" data-fragment-index="2"><code class="sql" data-trim>
+  INSERT INTO `entity_flat`
+    (`entity_id`, `scope_id`) 
+    SELECT `main`.`entity_id`, '4' AS `scope_id` 
+        FROM `entity` AS `main` 
+        WHERE (`main`.`entity_id` >= 1) AND (`main`.`entity_id` < 20001)
+      </code></pre>
+        </section>
+
+		<section>
+        	<h2>Flat Index Data Purpose</h2>
+            
+            <ul>
+            	<li class="fragment"><strong>Filter Data</strong><br />Fast selection with indexed where condition</li>
+            	<li class="fragment"><strong>Sort Data</strong><br />Fast ordering with indexed field order</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p class="large">Flat Data's main purpose is not a retrieval</p>
+        </section>
+
+		<section>
+            <h2>Small Flat vs Full Flat Generation</h2>
+            <canvas data-chart="bar" class="stretch" data-chart-src="chart/flat_vs_full_flat.csv"></canvas>
+    	</section>
+    
+       	<section>
+        	<h2>Pager problem</h2>
+            <p>As more data you have, as slower it is to navigate to the last page</p>
+        </section>
+        
+        <section>
+        	<h2>Problem in this query</h2>
+        	<pre><code class="sql" data-trim>
+SELECT * FROM `entity_flat_data` 
+    WHERE (is_active = 1) AND (scope_id = '5') 
+    ORDER BY `firstname` ASC LIMIT 50 OFFSET 450121
+   			</code></pre>
+        </section>
+        
+        <section>
+        	<h2>Solution</h2>
+            <p>Use a separate query for limit</p>
+        </section>
+        
+        <section>
+            <h2>Query Paging Approaches</h2>
+            <canvas data-chart="bar" class="stretch" data-chart-src="chart/limit.csv"></canvas>
+            
+            
+	   	</section>
+        
+        
+       <section>
+       	  <h2>How to make efficient pager query</h2>
+            <p class="fragment" data-fragment-index="1">Select ids at particular page</p>
+            <pre class="fragment" data-fragment-index="1"><code class="sql" data-trim>
+  SELECT `entity_id` FROM `entity_flat`
+      WHERE (scope_id = '2') AND (is_active = 1) 
+      ORDER BY `firstname` ASC LIMIT 100 OFFSET 8881</code></pre>
+      <p class="fragment" data-fragment-index="2">Select the data</p>
+      <pre class="fragment" data-fragment-index="2"><code class="sql" data-trim>
+  SELECT `entity_flat_data`.* FROM `entity_flat_data` 
+     WHERE (scope_id = '2') 
+     	AND (entity_id IN(3389, 7032, 2223, 724, 5076 ... ))
+      </code></pre>
+        </section>
+
+		<section>
+        	<h2>Exporting big data-sets?</h2>
+        </section>
+        
+        <section>
+            <h2>Data Export Approach</h2>
+          <canvas data-chart="bar" class="stretch" data-chart-src="chart/export-100k.csv"></canvas>
+    	</section>
+        
+        <section>
+       	  <h2>How to make efficient data export query</h2>
+          <ol>
+          	<li>For huge result-set, create a memory table with primary key values from main select</li>
+            <li>Join that memory table into data select</li>
+            <li>Drop all created memory tables after export is done</li>
+          </ol>
+        </section>
+        
+        <section>
+        	<h2>Benchmark code</h2>
+            <p>You can download benchmark base from this repository: <a href="https://github.com/EcomDev/mysql-performance-benchmark">https://github.com/EcomDev/mysql-performance-benchmark</a></p>
+        </section>
+        
+        <section>
+        	<h2>Take-aways</h2>
+            <ul>
+            	<li>Avoid joins if possible</li>
+                <li>Separate queries over single one</li>
+                <li>Create indexers</li>
+                <li>Use memory table for large datasets export</li>
+            </ul>
+        </section>
+       
+        
+        <section>
+          <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+        </section>
+    </div>
+</div>
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: true,
+	
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+			chart: {
+			  defaults: { 
+				  global: { 
+					  title: { fontColor: "#000" }, 
+				  }, 
+					legend: {
+						labels: { fontColor: "#000" },
+					},
+					scale: { 
+						scaleLabel: { fontColor: "#000" }, 
+						gridLines: { color: "#000", zeroLineColor: "#000" }, 
+						ticks: { fontColor: "#000" }, 
+					} 
+				},
+				line: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ], "borderDash": [ [5,10], [0,0] ]}, 
+				bar: { backgroundColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)",  "rgba(20,20,220,.8)" ]}, 
+				pie: { backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+				radar: { borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]}, 
+			},
+	
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },	
+		    	{ src: '/bower_components/reveal.js-plugins/chart/Chart.min.js'},
+	     		{ src: '/bower_components/reveal.js-plugins/chart/csv2chart.js'},
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});	
+	});
+</script>
+
+</body>
+</html>

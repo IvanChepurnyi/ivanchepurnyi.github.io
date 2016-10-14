@@ -1,0 +1,21 @@
+{
+  "name": "ivanchepurnyi.github.io",
+  "homepage": "https://github.com/IvanChepurnyi/ivanchepurnyi.github.io",
+  "authors": [
+    "Ivan Chepurnyi <ivan.chepurnyi@ecomdev.org>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "reveal.js-plugins": "*",
+    "reveal.js": "^3.3.0"
+  }
+}

@@ -4,9 +4,9 @@
 <head>
     <meta charset="utf-8">
 
-    <title>MeetMagento Poland 2016 - Architecture Challenges of Magento 2 Customizations</title>
+    <title>MeetMagento Poland 2016 - Architecture Challanges of Magento 2 Customizations</title>
 
-    <meta name="description" content="Architecture Challenges of Magento 2 Customizations">
+    <meta name="description" content="Architecture Challanges of Magento 2 Customizations">
     <meta name="author" content="Ivan Chepurnyi">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -157,7 +157,7 @@ section .x-large {
 
 <div class="reveal">
 	<footer>
-        <div class="left">MeetMagento Italy 2017</div><div class="right">#mm17it</div>
+        <div class="left">MeetMagento Poland 2016</div><div class="right">#mm16pl</div>
     </footer>
  <!-- Any section element inside of this container is displayed as a slide -->
  <div class="slides">
@@ -175,21 +175,22 @@ section .x-large {
         <section>
        	    <h2>About Me</h2>
             <ul>
-            	<li class="fragment">Magento addict since May 2007</li>
-				<li class="fragment">I love to take challenges</li>
+            	<li class="fragment">One of former members of Magento 1.x Core Team</li>
+				<li class="fragment">I love to take challanges</li>
    				<li class="fragment">I love to optimize performance</li>
-                <li class="fragment">I love to train others on those matters</li>
+                <li class="fragment">I give trainings and independent consultancy</li>
             </ul>
         </section>
         
         <section>
-        	<p class="large fragment">Are there any Software Architects?</p>
+        	<p class="large">Are there any Software Architects?</p>
             <p class="large fragment">Are there any Senior Developers?</p>
+            <p class="large fragment">Are there any Middle Developers?</p>
             <p class="large fragment">Are there any Junior Developers?</p>
         </section>
                 
         <section>
-        	<p class="large">Every developer in this room is an architect</p>
+        	<p class="large">Every developer in this room is a Software Architect</p>
         </section>
         
         <section>
@@ -212,9 +213,10 @@ section .x-large {
         	<p class="large">Symfony 1.0 just got released</p>
         </section>  
         
+        
         <section>
         	<p class="large">Composer?</p>
-        </section>
+        </section>  
       
         <section>
         	<p class="large">Unit testing was not yet a thing</p>
@@ -233,11 +235,11 @@ section .x-large {
         </section>
         
         <section>
-           <p class="large">Majority of Magento 2.x modules are refactor of legacy 1.x ones</p>
+           <p class="large">Magento 2.x is a refactor of legacy 1.x</p>
         </section>
         
         <section>
-           <p class="large">Challenge #0: Using Magento 1.x approach</p>
+           <p class="large">Challange #0: Using Magento 1.x approach</p>
         </section>
         
         <section>
@@ -246,14 +248,6 @@ section .x-large {
         
         <section>
            <p class="large">I am happy Magento 2.x does not use Symfony and Doctine</p>
-        </section>
-        
-        <section>
-        	<p class="large">Symfony has an excessive configuration boilerplate</p>
-        </section>
-        
-        <section>
-        	<p class="large">Doctrine is bound to its multi-vendor approach and forces your code style</p>
         </section>
         
         <section>
@@ -303,22 +297,23 @@ class Customer extends \Magento\Framework\Model\AbstractModel
         </section>
         
         <section>
+        	<p class="large">This is a dependency hell from 1.x</p>
+        </section>
+        
+        <section>
           <p class="large">So avoid looking into Magento core modules</p>
           <p class="large">Look at <a href="http://devdocs.magento.com/">http://devdocs.magento.com/</a> instead</p>
         </section>
         
         <section>
           <p class="large">Challenge #2: Data model dependencies</p>
-          <aside class="notes">
-             <p>Let me start with an example</p>
-          </aside>
         </section>
         
         <section>
           <p class="large">Global Website Store (GWS)</p>
           
           <aside class="notes">
-             <p>Ask who is modeling data based on GWS?</p>
+             <p>Ask who is modeling data based on GWS</p>
           </aside>
         </section>
         
@@ -353,57 +348,30 @@ class Customer extends \Magento\Framework\Model\AbstractModel
         </section>
         
         <section>
-          <p class="large">Rewrite (preference) is a bad thing</p>
+          <p class="large">Rewrite is a bad thing</p>
+          <p class="fragment">(not because of conflicts)</p>
         </section>
         
         <section>
-          <p class="large">Plugin is not a good thing either</p>
-        </section>
-        
-        <section>
-           <h3>Plugin disadvantages</h3>
-		   <ul>
-              <li class="fragment">It is very hard to debug</li>
-              <li class="fragment">It is global for an area</li>
-              <li class="fragment">It can affect performance</li>
-           </ul>
+          <p class="large">Plugin is a bad thing</p>
+          <p class="fragment">(unless you are doing it on interface)</p>
         </section>
          
         <section>
-          <p class="large">Local Dependency override is a good thing</p>
+          <p class="large">Dependency Injection is a good thing</p>
         </section>
-        
+       
         <section>
-           <h3>How To</h3>
-		   <ul>
-              <li class="fragment">Find exact dependency you need to modify for customization</li>
-              <li class="fragment">Create a decorator that implements same interface</li>
-              <li class="fragment">Pass it into a class via di.xml</li>
-           </ul>
+          <p class="large">Substitution is a good thing</p>
+          <p class="fragment">(but only for interfaces)</p>
         </section>
-           
+                
         <section>
            <p class="large">Challenge #4: Depending on concrete implementation</p>
         </section>
        
         <section>
            <p class="large">Injecting concrete class from another component leads to fragile dependency</p>
-        </section>
-        
-        <section>
-        <pre><code class="php stretch" data-trim>
-namespace Vendor\ProductCustomization\Model;
-
-class SomeClassThatDependsOnProduct
-{
-    public function doSomethingWithProduct(\Magento\Catalog\Model\Product $product)
-    {
-    	// Bunch of code lines
-        $category = $product-&gt;getCategory();
-        // Bunch of other code lines
-    }
-}
-</code></pre>
         </section>
         
         <section>
@@ -415,28 +383,50 @@ class SomeClassThatDependsOnProduct
 		   <ul>
               <li class="fragment">Find functionality you want to use from Magento 2 module</li>
               <li class="fragment">Create your own interface for that implementation</li>
-              <li class="fragment">Create an adapter based on that interface with Magento 2 module class as dependency</li>
+              <li class="fragment">Create adapter based on that interface with Magento 2 module class as dependency</li>
            </ul>
         </section>
        
         <section>
-        	<h3>Over-engeneering?</h3>
-            <ul>
-              <li class="fragment">You have to modify only adapter in case of breaking change</li>
-              <li class="fragment">Your code is easier to test</li>
-              <li class="fragment">Your code is protable</li>
-           </ul>
+        	<p class="large">Over-engeneering?</p>
         </section>
         
         <section>
         	<p class="large">You are abstracting your business logic from concerete framework implementation</p>
           	<p class="fragment">It means you can re-use your business logic in Magento 1.x or any other platform</p>
         </section>
+       
+        <section>
+           <h3>The Ultimate Challenge</h3>
+           <p class="large">Porting M1 code to M2</p>
+        </section>
         
         <section>
-        	<p class="large">We have to learn from Magento 1.x mistakes</p>
+           <p class="large">Is it really a challange?</p>
         </section>
-       
+        
+        <section>
+           <p class="large">It is a great opportunity</p>
+        </section>
+        
+        <section>
+           <h3>How To</h3>
+           <ul>
+	       	 <li class="fragment">Drive your new design by BDD</li>
+             <li class="fragment">Start from highlevel abstractions</li>
+   	      	 <li class="fragment">Introduce new code by referencing requirements from existing one</li>
+           	 <li class="fragment">Abstract your business logic from the platform</li>
+  	       	 <li class="fragment">Create adapters for framework specific code</li>
+           </ul>
+        </section>
+        
+        <section>
+        	<h3>Workshop</h3>
+            <p class="fragment">Tomorrow we are going to take that challange together</p>
+            <p class="fragment">Learn about SOLID principles as we design new module</p>
+            <p class="fragment">Join it at 14:00 and 16:30</p>
+        </section>
+        
     	<section>
           <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
             <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>

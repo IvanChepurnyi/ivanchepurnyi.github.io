@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>MeetMagento Poland 2016 - Architecture Challenges of Magento 2 Customizations</title>
+
+    <meta name="description" content="Architecture Challenges of Magento 2 Customizations">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+
+	<style type="text/css">
+	
+section .large {
+	font-size: 1.4em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+.template {
+    display: none;
+}
+
+.reveal section footer {
+    font-size: 1.0rem;
+}
+
+.reveal footer {
+    position: absolute;
+	top: 0px;
+	left: 0px;
+	display: block;
+	width: 100%;
+}
+
+.reveal footer div {
+   position: absolute;
+}
+
+@media print {
+	
+	.reveal footer div {
+        position: fixed;
+	}
+	
+	.reveal section.title-slide > div {
+		margin-top: 20%;
+	}
+}
+
+.reveal footer .left {
+	left: 10px;
+	top: 10px;
+}
+
+.reveal footer .right {
+	top: 10px;
+	right: 10px;
+}
+.reveal pre code {
+    font-size: 0.9rem;
+	line-height: normal;
+}
+.reveal section.title-slide {
+	height: 100%;
+	position: relative;
+}
+
+.reveal section.title-slide > div {
+	position: absolute;
+	top: 30%;
+	width: 100%;
+}
+
+.reveal section.title-slide > div > * {
+	display: block;
+    float: left;
+}
+
+.reveal section.title-slide img {
+	margin: 0;
+}
+
+.reveal section.title-slide > div .flex {
+	font-size: 1.4rem;
+	max-width: 78%;
+	padding-left: 10px;
+}
+
+.reveal section.title-slide h1 {
+	font-size: 3.6em;
+	padding-bottom: 10px;
+}
+
+.reveal section.title-slide h2 {
+	font-size: 2.2em;
+	color: #2081C4;
+}
+
+.reveal section.title-slide h1, 
+.reveal section.title-slide h2,
+.reveal section.title-slide p {
+	line-height: 0.85;
+	margin: 0;
+}
+
+.reveal section.title-slide > div .left {
+	width: 20%;
+}
+</style>
+<!--[if lt IE 9]>
+<script src="lib/js/html5shiv.js"></script>
+<![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+ 
+        <section data-background="mm17cz.png"> 
+        </section> 
+        <section>
+       	    <h2>About Me</h2>
+            <ul>
+            	<li class="fragment">Magento addict since May 2007</li>
+				<li class="fragment">I love to take challenges</li>
+   				<li class="fragment">I love to optimize performance</li>
+                <li class="fragment">I love to train others on those matters</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p class="large fragment">Are there any Software Architects?</p>
+            <p class="large fragment">Are there any Senior Developers?</p>
+            <p class="large fragment">Are there any Junior Developers?</p>
+        </section>
+                
+        <section>
+        	<p class="large">Every developer in this room is an architect</p>
+        </section>
+        
+        <section>
+           	<p class="large">We are all responsible for our Software Design</p>
+        </section>
+        
+        <section>
+        	<p class="large">Architecting software is hard...</p>
+        </section>
+        
+        <section>
+        	<p class="large">For example in the beggining of 2007</p>
+        </section>
+        
+        <section>
+        	<p class="large">ZF1 just went into first beta (0.8.0)</p>
+        </section>
+        
+        <section>
+        	<p class="large">Symfony 1.0 just got released</p>
+        </section>  
+        
+        <section>
+        	<p class="large">Composer?</p>
+        </section>
+      
+        <section>
+        	<p class="large">Unit testing was not yet a thing</p>
+        </section>  
+       
+        <section>
+        	<p class="large">Everyone was using Subversion (SVN)</p>
+        </section>
+         
+        <section>
+          <p class="large">I wish I knew everything I know now back then</p>
+        </section>
+        
+        <section>
+           <p class="large">But then we wouldn't have this talk today</p>
+        </section>
+        
+        <section>
+           <p class="large">Majority of Magento 2.x modules are refactor of legacy 1.x ones</p>
+        </section>
+        
+        <section>
+           <p class="large">Challenge #0: Using Magento 1.x approach</p>
+        </section>
+        
+        <section>
+           <p class="large">Magento 2.x is a huge step ahead, learning new concepts hard at first</p>
+        </section>
+        
+        <section>
+           <p class="large">I am happy Magento 2.x does not use Symfony and Doctine</p>
+        </section>
+        
+        <section>
+        	<p class="large">Symfony has an excessive configuration boilerplate</p>
+        </section>
+        
+        <section>
+        	<p class="large">Doctrine is bound to its multi-vendor approach and forces your code style</p>
+        </section>
+        
+        <section>
+           <p class="large">Challenge #1: Looking at the core modules to create your own functionality</p>
+        </section>
+                
+        <section>
+           <p class="large">There are some new code, but mostly it is still good old Magento 1.x code</p>
+        </section>
+       
+        <section>
+          <p class="large">Do not look at the core module for an example of implemenation.</p>
+          <p class="fragment">Even <strong>Magento_Customer</strong> module is not the best example.</p>
+        </section>
+        
+        <section>
+<pre><code class="php stretch" data-trim>
+namespace Magento\Customer\Model\Customer;
+
+class Customer extends \Magento\Framework\Model\AbstractModel
+{
+    public function __construct(
+    	\Magento\Framework\Model\Context $context,
+        \Magento\Framework\Registry $registry,
+        \Magento\Store\Model\StoreManagerInterface $storeManager,
+        \Magento\Eav\Model\Config $config,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Customer\Model\ResourceModel\Customer $resource,
+        \Magento\Customer\Model\Config\Share $configShare,
+        \Magento\Customer\Model\AddressFactory $addressFactory,
+        \Magento\Customer\Model\ResourceModel\Address\CollectionFactory $addressesFactory,
+        \Magento\Framework\Mail\Template\TransportBuilder $transportBuilder,
+        GroupRepositoryInterface $groupRepository,
+        \Magento\Framework\Encryption\EncryptorInterface $encryptor,
+        \Magento\Framework\Stdlib\DateTime $dateTime,
+        CustomerInterfaceFactory $customerDataFactory,
+        DataObjectProcessor $dataObjectProcessor,
+        \Magento\Framework\Api\DataObjectHelper $dataObjectHelper,
+        \Magento\Customer\Api\CustomerMetadataInterface $metadataService,
+        \Magento\Framework\Indexer\IndexerRegistry $indexerRegistry,
+        \Magento\Framework\Data\Collection\AbstractDb $resourceCollection = null,
+        array $data = []
+    ) {
+    }
+}
+</code></pre>
+        </section>
+        
+        <section>
+          <p class="large">So avoid looking into Magento core modules</p>
+          <p class="large">Look at <a href="http://devdocs.magento.com/">http://devdocs.magento.com/</a> instead</p>
+        </section>
+        
+        <section>
+          <p class="large">Challenge #2: Data model dependencies</p>
+          <aside class="notes">
+             <p>Let me start with an example</p>
+          </aside>
+        </section>
+        
+        <section>
+          <p class="large">Global Website Store (GWS)</p>
+          
+          <aside class="notes">
+             <p>Ask who is modeling data based on GWS?</p>
+          </aside>
+        </section>
+        
+        <section>
+          <p class="large">Binding your data model to GWS leads to scaling issues of your implementation</p>
+        </section>
+        
+        <section>
+          <h3>Example</h3>
+          <ul>
+             <li class="fragment">EU Merchant can sell to 28 member states</li>
+             <li class="fragment">Countries might have more then one language</li>
+             <li class="fragment">Every country might get own domain name</li>
+             <li class="fragment">Price might differ per country</li>
+          </ul>
+        </section>
+        
+        <section>
+          <h3>Problem</h3>
+          <ul>
+             <li class="fragment">You might end up with 100+ store views</li>
+             <li class="fragment">Language+Country results in data duplications in EAV structure</li>
+          </ul>
+        </section>
+        
+        <section>
+           <p class="large">Avoid existing structures where possible and inverse your dependencies</p>
+        </section>
+        
+        <section>
+           <p class="large">Challenge #3: Extending existing functionality</p>
+        </section>
+        
+        <section>
+          <p class="large">Rewrite (preference) is a bad thing</p>
+        </section>
+        
+        <section>
+          <p class="large">Plugin is not a good thing either</p>
+        </section>
+        
+        <section>
+           <h3>Plugin disadvantages</h3>
+		   <ul>
+              <li class="fragment">It is very hard to debug</li>
+              <li class="fragment">It is global for an area</li>
+              <li class="fragment">It can affect performance</li>
+           </ul>
+        </section>
+         
+        <section>
+          <p class="large">Local Dependency override is a good thing</p>
+        </section>
+        
+        <section>
+           <h3>How To</h3>
+		   <ul>
+              <li class="fragment">Find exact dependency you need to modify for customization</li>
+              <li class="fragment">Create a decorator that implements same interface</li>
+              <li class="fragment">Pass it into a class via di.xml</li>
+           </ul>
+        </section>
+           
+        <section>
+           <p class="large">Challenge #4: Depending on concrete implementation</p>
+        </section>
+       
+        <section>
+           <p class="large">Injecting concrete class from another component leads to fragile dependency</p>
+        </section>
+        
+        <section>
+        <pre><code class="php stretch" data-trim>
+namespace Vendor\ProductCustomization\Model;
+
+class SomeClassThatDependsOnProduct
+{
+    public function doSomethingWithProduct(\Magento\Catalog\Model\Product $product)
+    {
+    	// Bunch of code lines
+        $category = $product-&gt;getCategory();
+        // Bunch of other code lines
+    }
+}
+</code></pre>
+        </section>
+        
+        <section>
+           <p class="large">Protect your code by introducing own abstractions</p>
+        </section>
+        
+        <section>
+           <h3>How To</h3>
+		   <ul>
+              <li class="fragment">Find functionality you want to use from Magento 2 module</li>
+              <li class="fragment">Create your own interface for that implementation</li>
+              <li class="fragment">Create an adapter based on that interface with Magento 2 module class as dependency</li>
+           </ul>
+        </section>
+       
+        <section>
+        	<h3>Over-engeneering?</h3>
+            <ul>
+              <li class="fragment">You have to modify only adapter in case of breaking change</li>
+              <li class="fragment">Your code is easier to test</li>
+              <li class="fragment">Your code is protable</li>
+           </ul>
+        </section>
+        
+        <section>
+        	<p class="large">You are abstracting your business logic from concerete framework implementation</p>
+          	<p class="fragment">It means you can re-use your business logic in Magento 1.x or any other platform</p>
+        </section>
+        
+        <section>
+        	<p class="large">We have to learn from Magento 1.x mistakes</p>
+        </section>
+       
+    	<section>
+          <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+        </section>
+    </div>
+</div>
+
+
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: false,
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+			keyboard: {
+				66: 'toggleOverview',
+				33: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateLeft();
+					}
+					
+					return Reveal.navigatePrev();
+				},
+				34: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateRight();
+					}
+					
+					return Reveal.navigateNext();
+				}
+			},
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});
+		
+		var fixZoom = function () {
+			var footer = document.querySelector('.reveal > footer');
+			var slides = document.querySelector('.reveal > .slides');
+			if (footer && slides) {
+				if (slides.style.zoom) {
+					footer.style.zoom = slides.style.zoom;
+				} else if (slides.style.transform) {
+					footer.style.transform = slides.style.transform.replace(/translate\([^\)]+\)/, '');
+				}	
+			}
+		}
+		
+		Reveal.addEventListener('slidechanged', function () {
+			fixZoom();
+		});
+		
+		Reveal.addEventListener('ready', function () {
+			var slides = document.querySelectorAll('.reveal section');
+			for (var i in slides) {		
+				var slide = slides.item(i);
+				
+				if (slide.classList.contains('title-slide')) {
+					continue;
+				}
+				
+				slide.classList.add('center');
+			}
+			fixZoom();
+		});
+	});
+</script>
+
+</body>
+</html>

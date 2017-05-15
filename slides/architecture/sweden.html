@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>MeetMagento Sweden 2017 - Architecture Challenges of Magento 2 Customizations</title>
+
+    <meta name="description" content="Architecture Challenges of Magento 2 Customizations">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+
+	<style type="text/css">
+	
+section .large {
+	font-size: 1.4em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+.template {
+    display: none;
+}
+
+.reveal section footer {
+    font-size: 1.0rem;
+}
+
+.reveal footer {
+    position: absolute;
+	top: 0px;
+	left: 0px;
+	display: block;
+	width: 100%;
+}
+
+.reveal footer div {
+   position: absolute;
+}
+
+@media print {
+	
+	.reveal footer div {
+        position: fixed;
+	}
+	
+	.reveal section.title-slide > div {
+		margin-top: 20%;
+	}
+}
+
+.reveal footer .left {
+	left: 10px;
+	top: 10px;
+}
+
+.reveal footer .right {
+	top: 10px;
+	right: 10px;
+}
+.reveal pre code {
+    font-size: 0.9rem;
+	line-height: normal;
+}
+.reveal section.title-slide {
+	height: 100%;
+	position: relative;
+}
+
+.reveal section.title-slide > div {
+	position: absolute;
+	top: 30%;
+	width: 100%;
+}
+
+.reveal section.title-slide > div > * {
+	display: block;
+    float: left;
+}
+
+.reveal section.title-slide img {
+	margin: 0;
+}
+
+.reveal section.title-slide > div .flex {
+	font-size: 1.4rem;
+	max-width: 78%;
+	padding-left: 10px;
+}
+
+.reveal section.title-slide h1 {
+	font-size: 3.6em;
+	padding-bottom: 10px;
+}
+
+.reveal section.title-slide h2 {
+	font-size: 2.2em;
+	color: #2081C4;
+}
+
+.reveal section.title-slide h1, 
+.reveal section.title-slide h2,
+.reveal section.title-slide p {
+	line-height: 0.85;
+	margin: 0;
+}
+
+.reveal section.title-slide > div .left {
+	width: 20%;
+}
+</style>
+<!--[if lt IE 9]>
+<script src="lib/js/html5shiv.js"></script>
+<![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+	<footer>
+        <div class="left">MeetMagento Sweden 2017</div><div class="right">#mm17se</div>
+    </footer>
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+ 
+         <section class="title-slide">
+           <div>
+           	  <div class="left"><img src="/images/logo-icon.svg" class="plain" /></div>
+              <div class="flex">
+                  <h1>Architecture Challenges</h1>
+                  <h2>Magento 2 Customizations</h2>
+              </div>
+           </div>
+        </section>        
+        
+        <section>
+       	    <h2>About Me</h2>
+            <ul>
+            	<li class="fragment">Magento addict since May 2007</li>
+				<li class="fragment">I love to take challenges</li>
+   				<li class="fragment">I love to optimize performance</li>
+                <li class="fragment">I love to train others on those matters</li>
+            </ul>
+        </section>
+        
+        <section>
+        	<p class="large fragment">Are there any Software Architects?</p>
+            <p class="large fragment">Are there any Senior Developers?</p>
+            <p class="large fragment">Are there any Junior Developers?</p>
+        </section>
+                
+        <section>
+        	<p class="large">Every developer in this room is an architect</p>
+        </section>
+        
+        <section>
+           	<p class="large">We are all responsible for our Software Design</p>
+        </section>
+        
+        <section>
+        	<p class="large">Architecting software is hard...</p>
+        </section>
+        
+        <section>
+        	<p class="large">For example in the beggining of 2007</p>
+        </section>
+        
+        <section>
+        	<p class="large">ZF1 just went into first beta (0.8.0)</p>
+        </section>
+        
+        <section>
+        	<p class="large">Symfony 1.0 just got released</p>
+        </section>  
+        
+        <section>
+        	<p class="large">Composer?</p>
+        </section>
+      
+        <section>
+        	<p class="large">Unit testing was not yet a thing</p>
+        </section>  
+       
+        <section>
+        	<p class="large">Everyone was using Subversion (SVN)</p>
+        </section>
+         
+        <section>
+          <p class="large">I wish I knew everything I know now back then</p>
+        </section>
+        
+        <section>
+            <section>
+               <p class="large">Challenge #0: Using Magento 1.x approach</p>
+            </section>
+            
+            <section>
+               <p class="large">Magento 2.x is a huge step ahead and learning new concepts hard at first</p>
+            </section>
+            
+            <section>
+               <p class="large">But these new learning curve is going to pay off in the end</p>	
+            </section>	
+            
+            <section>
+                <p class="large">A lot of people tell that Magento 2 should have used Symfony and Doctrine...</p>
+            </section>
+            
+            <section>
+               <p class="large">But I am happy Magento 2.x does not use Symfony and Doctine</p>
+            </section>
+            
+            <section>
+                <p>Symfony has an excessive configuration boilerplate</p>
+                <pre><code class="xml stretch" data-trim>
+&#x3C;?xml version=&#x22;1.0&#x22; ?&#x3E;
+
+&#x3C;container xmlns=&#x22;http://symfony.com/schema/dic/services&#x22;
+    xmlns:xsi=&#x22;http://www.w3.org/2001/XMLSchema-instance&#x22;
+    xsi:schemaLocation=&#x22;http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd&#x22;&#x3E;
+
+    &#x3C;parameters&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.configuration.class&#x22;&#x3E;Doctrine\ORM\Configuration&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.entity_manager.class&#x22;&#x3E;Doctrine\ORM\EntityManager&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.manager_configurator.class&#x22;&#x3E;Doctrine\Bundle\DoctrineBundle\ManagerConfigurator&#x3C;/parameter&#x3E;
+
+        &#x3C;!-- cache --&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.array.class&#x22;&#x3E;Doctrine\Common\Cache\ArrayCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.apc.class&#x22;&#x3E;Doctrine\Common\Cache\ApcCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcache.class&#x22;&#x3E;Doctrine\Common\Cache\MemcacheCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcache_host&#x22;&#x3E;localhost&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcache_port&#x22;&#x3E;11211&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcache_instance.class&#x22;&#x3E;Memcache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcached.class&#x22;&#x3E;Doctrine\Common\Cache\MemcachedCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcached_host&#x22;&#x3E;localhost&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcached_port&#x22;&#x3E;11211&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.memcached_instance.class&#x22;&#x3E;Memcached&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.redis.class&#x22;&#x3E;Doctrine\Common\Cache\RedisCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.redis_host&#x22;&#x3E;localhost&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.redis_port&#x22;&#x3E;6379&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.redis_instance.class&#x22;&#x3E;Redis&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.xcache.class&#x22;&#x3E;Doctrine\Common\Cache\XcacheCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.wincache.class&#x22;&#x3E;Doctrine\Common\Cache\WinCacheCache&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.cache.zenddata.class&#x22;&#x3E;Doctrine\Common\Cache\ZendDataCache&#x3C;/parameter&#x3E;
+
+        &#x3C;!-- metadata --&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.driver_chain.class&#x22;&#x3E;Doctrine\Common\Persistence\Mapping\Driver\MappingDriverChain&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.annotation.class&#x22;&#x3E;Doctrine\ORM\Mapping\Driver\AnnotationDriver&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.xml.class&#x22;&#x3E;Doctrine\ORM\Mapping\Driver\SimplifiedXmlDriver&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.yml.class&#x22;&#x3E;Doctrine\ORM\Mapping\Driver\SimplifiedYamlDriver&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.php.class&#x22;&#x3E;Doctrine\ORM\Mapping\Driver\PHPDriver&#x3C;/parameter&#x3E;
+        &#x3C;parameter key=&#x22;doctrine.orm.metadata.staticphp.class&#x22;&#x3E;Doctrine\ORM\Mapping\Driver\StaticPHPDriver&#x3C;/parameter&#x3E;
+                </code></pre>
+            </section>
+            
+            <section>
+                <p class="large">Doctrine is bound to its multi-vendor approach and forces code to be your data representation</p>
+                <pre><code class="php stretch" data-trim>
+/**
+ * @Entity @Table(name="bugs")
+ **/
+class Bug
+{
+    /**
+     * @Id @Column(type="integer") @GeneratedValue
+     **/
+    protected $id;
+    /**
+     * @Column(type="string")
+     **/
+    protected $description;
+    /**
+     * @Column(type="datetime")
+     **/
+    protected $created;
+    /**
+     * @Column(type="string")
+     **/
+    protected $status;
+
+    /**
+     * @ManyToOne(targetEntity="User", inversedBy="assignedBugs")
+     **/
+    protected $engineer;
+
+    /**
+     * @ManyToOne(targetEntity="User", inversedBy="reportedBugs")
+     **/
+    protected $reporter;
+
+    /**
+     * @ManyToMany(targetEntity="Product")
+     **/
+    protected $products;
+
+    // ... (other code)
+}
+                </code></pre>
+            </section>
+            
+            <section>
+            	<h3 class="large">Focus on your domain model</h3>
+                <p class="large">Do not drive design by your framework of choice, use it as a tool.</p>
+            </section>
+        </section>
+        
+        <section>
+        
+            <section>
+               <p class="large">Challenge #1: Looking at the core modules to create your own functionality</p>
+            </section>
+                    
+            <section>
+               <p class="large">There are some new code, but mostly it is still good old Magento 1.x code that is going to change</p>
+            </section>
+           
+            <section>
+              <p class="large">Do not look at the core module for an example of implemenation, do not copy-paste the code</p>
+            </section>
+         
+            <section>
+              <p class="large">Use core code only as a reference</p>
+            </section>
+            
+            <section>
+              <p class="large">Read <a href="http://devdocs.magento.com/">http://devdocs.magento.com/</a> for module structure guidelines</p>
+            </section>
+		</section>
+        
+        <section>
+                
+            <section>
+              <p class="large">Challenge #2: Data model dependencies</p>
+            </section>
+            
+            <section>
+              <p class="large">Global Website Store (GWS)</p>
+              
+              <aside class="notes">
+                 <p>Ask who is modeling data based on GWS?</p>
+              </aside>
+            </section>
+            
+            <section>
+              <p class="large">Binding your data model to GWS leads to scaling issues of your implementation</p>
+            </section>
+            
+            <section>
+              <h3>Example</h3>
+              <ul>
+                 <li class="fragment">EU Merchant can sell to 28 member states</li>
+                 <li class="fragment">Countries might have more then one language</li>
+                 <li class="fragment">Every country might get own domain name</li>
+                 <li class="fragment">Price might differ per country</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h3>Problem</h3>
+              <ul>
+                 <li class="fragment">You might end up with 100+ store views</li>
+                 <li class="fragment">Language+Country results in data duplications in EAV structure</li>
+              </ul>
+            </section>
+            
+            <section>
+               <p class="large">Avoid existing structures where possible and inverse your dependencies</p>
+            </section>
+            
+            <section>
+               <h3>Solution</h3>
+               <ul>
+                  <li class="fragment">Create own entity: Country Scope</li>
+                  <li class="fragment">Create an adapter around store view to override configuration at runtime</li>
+                  <li class="fragment">Use store view as a language and link it to scope</li>
+                  <li class="fragment">Create country access attribute on product level if needed</li>
+               </ul>
+            </section>
+        
+        </section>
+        
+        <section>
+        
+            <section>
+               <p class="large">Challenge #3: Extending existing functionality</p>
+            </section>
+            
+            <section>
+              <p class="large">Rewrite (preference) is a bad thing</p>
+            </section>
+            
+            <section>
+              <p class="large">Plugin is not a good thing either</p>
+            </section>
+            
+            <section>
+               <h3>Plugin disadvantages</h3>
+               <ul>
+                  <li class="fragment">It is very hard to debug</li>
+                  <li class="fragment">It is global for an area</li>
+                  <li class="fragment">It can affect performance</li>
+               </ul>
+            </section>
+             
+            <section>
+              <p class="large">Local Dependency override is a good thing</p>
+            </section>
+            
+            <section>
+               <h3>How To</h3>
+               <ul>
+                  <li class="fragment">Find exact dependency you need to modify for customization</li>
+                  <li class="fragment">Create a decorator that implements same interface</li>
+                  <li class="fragment">Pass it into a class via di.xml</li>
+               </ul>
+            </section>
+        </section>
+        
+        <section>
+            
+            <section>
+               <p class="large">Challenge #4: Depending on concrete implementation</p>
+            </section>
+           
+            <section>
+               <p class="large">Injecting concrete class from another component leads to fragile dependency</p>
+            </section>
+            
+            <section>
+               <p class="large">Protect your code by introducing own abstractions</p>
+            </section>
+            
+            <section>
+               <h3>How To</h3>
+               <ul>
+                  <li class="fragment">Find functionality you want to use from Magento 2 module</li>
+                  <li class="fragment">Create your own interface for that implementation</li>
+                  <li class="fragment">Create an adapter based on that interface with Magento 2 module class as dependency</li>
+               </ul>
+            </section>
+        
+        </section>
+        
+        <section>
+        	<h2>Concrete Examples</h2>
+        </section>
+        
+        <section>
+        	<section>
+            	<p class="large">I need to export stock quantities of physical product SKUs for a specific store</p>
+               	<p class="fragment">So I want to use external module entity repository...</p>
+            </section>
+            
+            <section>
+            	<h2>Drawbacks</h2>
+				<ul>
+                	<li class="fragment">Direct use of repository requires too much boilerplate inside of business logic</li>
+                    <li class="fragment">Request parameters are not revealing the intent</li>
+                    <li class="fragment">Performance optimization would require complete rewrite of the code</li>
+                </ul>              
+            </section>
+            
+            <section>
+            	<p class="large">Create your own abstraction and implement Magento adapter for it</p>
+            </section>
+            
+            <section>
+            <h3>Component level abstraction</h3>
+            <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport\Source;
+
+interface Entry
+{
+    public function getName();
+    
+    public function getSku();
+    
+    public function getQty();
+}
+
+interface EntryGateway
+{
+    public function getTotalPages($scopeId): int;
+
+    public function getEntriesByPage($scopeId, $page): Entry[];
+}
+</code></pre>
+            </section>
+            
+            <section>
+            <h3>Adapter for entry</h3>
+            <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport\Source;
+
+
+use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\CatalogInventory\Api\Data\StockStatusInterface;
+
+class MagentoEntry implements Entry
+{
+    private $product;
+    private $stockStatus;
+
+    public function __construct(ProductInterface $product, StockStatusInterface $stockStatus)
+    {
+        $this->product = $product;
+        $this->stockStatus = $stockStatus;
+    }
+
+    public function getName()
+    {
+        return $this->product->getName();
+    }
+
+    public function getSku()
+    {
+        return $this->product->getSku();
+    }
+
+    public function getQty()
+    {
+        return $this->stockStatus->getQty();
+    }
+}
+</code></pre>
+            </section>
+            
+            <section>
+            <h3>Adapter for entry gateway</h3>
+            <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport\Source;
+
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Store\Model\StoreManagerInterface;
+
+class MagentoEntryGateway implements EntryGateway
+{
+    private $searchCriteriaBuilder;
+
+    private $stockRegistry;
+
+    private $productRepository;
+
+    private $storeManager;
+
+    private $pageSize;
+
+    private $magentoEntryFactory;
+
+    public function __construct(
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        ProductRepositoryInterface $productRepository,
+        StoreManagerInterface $storeManager,
+        StockRegistryInterface $stockRegistry,
+        MagentoEntryFactory $magentoEntryFactory
+    ) {
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->productRepository = $productRepository;
+        $this->storeManager = $storeManager;
+        $this->stockRegistry = $stockRegistry;
+        $this->pageSize = 1000;
+        $this->magentoEntryFactory = $magentoEntryFactory;
+    }
+    // .. next slide
+}
+</code></pre>
+            </section>
+             <section>
+            <h3>Adapter for entry gateway</h3>
+            <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport\Source;
+
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Store\Model\StoreManagerInterface;
+
+class MagentoEntryGateway implements EntryGateway
+{
+    // .. prev slide
+    public function getTotalPages($scopeId): int
+    {
+        $this->storeManager->setCurrentStore($scopeId);
+        $searchCriteria = $this->createProductSearchCriteria(1, 1);
+        $searchResult = $this->productRepository->getList($searchCriteria);
+
+        return ceil($searchResult->getTotalCount() / $this->pageSize);
+    }
+
+    public function getEntriesByPage($scopeId, $page): \Traversable
+    {
+        $this->storeManager->setCurrentStore($scopeId);
+
+        $searchCriteria = $this->createProductSearchCriteria($this->pageSize, $page);
+        $searchResult = $this->productRepository->getList($searchCriteria);
+
+        foreach ($searchResult->getItems() as $productItem) {
+            yield $this->magentoEntryFactory->create([
+                'product' => $productItem,
+                'stockStatus' => $this->stockRegistry->getStockStatus(
+                    $productItem->getId(),
+                    $scopeId
+                ),
+            ]);
+        }
+    }
+    // .. next slide
+}
+</code></pre>
+            </section>
+            
+            <section>
+            <h3>Adapter for entry gateway</h3>
+            <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport\Source;
+
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Store\Model\StoreManagerInterface;
+
+class MagentoEntryGateway implements EntryGateway
+{
+    // .. prev slide
+    private function createProductSearchCriteria($pageSize, $currentPage): \Magento\Framework\Api\SearchCriteria
+    {
+        $searchCriteria = $this->searchCriteriaBuilder
+            ->addFilter('type_id', 'simple')
+            ->addFilter('status', '1')
+            ->setPageSize($pageSize)
+            ->setCurrentPage($currentPage)
+            ->create()
+        ;
+        return $searchCriteria;
+    }
+}
+</code></pre>
+</section>
+
+<section>
+	<h3>Somewhere in your component</h3>
+    <pre><code class="php stretch" data-trim>
+namespace Conference\StockExport;
+
+use Conference\StockExport\Source\EntryGateway;
+
+class Export
+{
+    private $entryGateway;
+
+    public function __construct(EntryGateway $entryGateway)
+    {
+        $this->entryGateway = $entryGateway;
+    }
+
+    public function export(\SplFileObject $file, $scopeId)
+    {
+        $file->fputcsv(['name', 'sku', 'qty']);
+
+        $totalPages = $this->entryGateway->getTotalPages($scopeId);
+
+        for ($page = 1; $page <= $totalPages; $page ++) {
+            foreach ($this->entryGateway->getEntriesByPage($scopeId, $page) as $entry) {
+                $file->fputcsv([$entry->getName(), $entry->getSku(), $entry->getQty()]);
+            }
+        }
+    }
+}
+    </code></pre>
+</section>
+
+<section>
+<h3>Benefits</h3>
+<ul>
+	<li class="fragment">EntryGateway is much easier to use as test dependency</li>
+  	<li class="fragment">It is less fragile, as Magento glue code is isolated from your code</li>
+    <li class="fragment">Easy to implement new adapter for your component</li>
+</ul>
+</section>
+        </section>
+        
+         <section>
+        	<section>
+            	<p class="large">I want to auto-complete address by postcode and house number</p>
+            	<p class="fragment">So I need to customize Magento behaviour</p>
+            </section>
+            
+            <section>
+            	<h2>Extension Point</h2>
+                <pre><code class="php stretch" data-trim>
+ namespace Magento\Checkout\Model;
+
+class GuestShippingInformationManagement implements \Magento\Checkout\Api\GuestShippingInformationManagementInterface
+{
+    protected $quoteIdMaskFactory;
+
+    protected $shippingInformationManagement;
+
+    public function __construct(
+        \Magento\Quote\Model\QuoteIdMaskFactory $quoteIdMaskFactory,
+        \Magento\Checkout\Api\ShippingInformationManagementInterface $shippingInformationManagement
+    ) {
+        $this->quoteIdMaskFactory = $quoteIdMaskFactory;
+        $this->shippingInformationManagement = $shippingInformationManagement;
+    }
+
+    public function saveAddressInformation(
+        $cartId,
+        \Magento\Checkout\Api\Data\ShippingInformationInterface $addressInformation
+    ) {
+        $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
+        return $this->shippingInformationManagement->saveAddressInformation(
+            $quoteIdMask->getQuoteId(),
+            $addressInformation
+        );
+    }
+}
+</code></pre>
+            </section>
+            
+            <section>
+            	<h2>Abstraction</h2>
+                <pre><code class="php stretch" data-trim>
+namespace Conference\CompleteAddress\Model;
+
+interface CompletableAddress
+{
+    public function isComplete(): bool;
+
+    public function getPostcode(): string;
+
+    public function getHouseNumber(): string;
+
+    public function complete(string $street, string $city);
+}
+    			</code></pre>
+            </section>
+            
+             <section>
+            	<h2>Domain Logic</h2>
+                <pre><code class="php stretch" data-trim>
+namespace Conference\CompleteAddress\Model;
+
+class CompleteService
+{
+    public function completeAdddress(CompletableAddress $address)
+    {
+        if ($address->isComplete()) {
+            return;
+        }
+        
+        // .. do something with house number and postcode
+
+        $address->complete($streetName, $city);
+    }
+}
+    			</code></pre>
+            </section>
+            
+            <section>
+            	<h2>Address Adapter</h2>
+            	<pre><code class="php stretch" data-trim>
+namespace Conference\CompleteAddress\Model;
+
+use Magento\Checkout\Api\Data\ShippingInformationInterface;
+
+class MagentoCompletableAddress implements CompletableAddress
+{
+    private $shippingInformation;
+
+    public function __construct(ShippingInformationInterface $shippingInformation)
+    {
+        $this->shippingInformation = $shippingInformation;
+    }
+    // ... other methods
+    public function complete(string $street, string $city)
+    {
+        $this->getShippingAddress()->setCity($city);
+        $this->getShippingAddress()->setStreet([
+            $this->getShippingAddress()->getStreet()[0],
+            $street
+        ]);
+    }
+
+    private function getShippingAddress(): \Magento\Quote\Api\Data\AddressInterface
+    {
+        return $this->shippingInformation->getShippingAddress();
+    }
+}</code></pre>
+            </section>
+            
+            <section>
+            	<h2>Decorator</h2>
+                <pre><code class="php stretch" data-trim>
+namespace Conference\CompleteAddress\Model;
+
+use Magento\Checkout\Api\ShippingInformationManagementInterface;
+use Magento\Checkout\Api\Data\ShippingInformationInterface;
+
+class ShippingInfromationManagementDecorator implements ShippingInformationManagementInterface
+{
+    private $shippingInformationManagement;
+
+    private $completableAddressFactory;
+
+    private $completeService;
+
+    public function __construct(
+        ShippingInformationManagementInterface $shippingInformationManagement,
+        MagentoCompletableAddressFactory $completableAddressFactory,
+        CompleteService $completeService
+    ) {
+        $this->shippingInformationManagement = $shippingInformationManagement;
+        $this->completableAddressFactory = $completableAddressFactory;
+        $this->completeService = $completeService;
+    }
+
+    public function saveAddressInformation($cartId, ShippingInformationInterface $addressInformation)
+    {
+        $completableAddress = $this->completableAddressFactory->create(
+            ['shippingInformation' => $addressInformation]
+        );
+
+        $this->completeService->completeAdddress($completableAddress);
+        return $this->shippingInformationManagement->saveAddressInformation(
+            $cartId,
+            $addressInformation
+        );
+    }
+}
+    			</code></pre>
+            </section>
+            
+            <section>
+            	<h2>Configuration</h2>
+                <pre><code class="xml stretch" data-trim>
+&#x3C;?xml version=&#x22;1.0&#x22;?&#x3E;
+&#x3C;config xmlns:xsi=&#x22;http://www.w3.org/2001/XMLSchema-instance&#x22;
+        xsi:noNamespaceSchemaLocation=&#x22;urn:magento:framework:ObjectManager/etc/config.xsd&#x22;&#x3E;
+
+    &#x3C;type name=&#x22;Magento\Checkout\Model\GuestShippingInformationManagement&#x22;&#x3E;
+        &#x3C;arguments&#x3E;
+            &#x3C;argument
+                name=&#x22;shippingInformationManagement&#x22;
+                xsi:type=&#x22;object&#x22;&#x3E;
+                	Conference\CompleteAddress\Model\ShippingInformationManagementDecorator
+            &#x3C;/argument&#x3E;
+        &#x3C;/arguments&#x3E;
+    &#x3C;/type&#x3E;
+&#x3C;/config&#x3E;
+    			</code></pre>
+            </section>
+            
+        	<section>
+            	<p class="large">I want to customize Magento behaviour but there is no interface</p>
+            </section>
+            
+        	<section>
+            	<p class="large">Than you can create a plugin</p>
+            </section>
+            
+            <section>
+            	<h2>Plugin</h2>
+                <pre><code class="php stretch" data-trim>
+namespace Conference\CompleteAddress\Model;
+
+use Magento\Checkout\Model\ShippingInformationManagement;
+
+class ShippingInformationManagementPlugin
+{
+    private $completableAddressFactory;
+
+    private $completeService;
+
+    public function __construct(
+        MagentoCompletableAddressFactory $completableAddressFactory,
+        CompleteService $completeService
+    ) {
+        $this->completableAddressFactory = $completableAddressFactory;
+        $this->completeService = $completeService;
+    }
+
+    public function beforeSaveAddressInformation(
+        ShippingInformationManagement $subject,
+        $cartId,
+        ShippingInformationInterface $addressInformation
+    ) {
+        $completableAddress = $this->completableAddressFactory->create(
+            ['shippingInformation' => $addressInformation]
+        );
+
+        $this->completeService->completeAdddress($completableAddress);
+
+        return [$cartId, $addressInformation];
+    }
+}
+    			</code></pre>
+            </section>
+            <section>
+            	<h2>Configuration</h2>
+                <pre><code class="xml stretch" data-trim>
+&#x3C;?xml version=&#x22;1.0&#x22;?&#x3E;
+&#x3C;config xmlns:xsi=&#x22;http://www.w3.org/2001/XMLSchema-instance&#x22;
+        xsi:noNamespaceSchemaLocation=&#x22;urn:magento:framework:ObjectManager/etc/config.xsd&#x22;&#x3E;
+    &#x3C;type name=&#x22;Magento\Checkout\Model\ShippingInformationManagement&#x22;&#x3E;
+        &#x3C;plugin
+                type=&#x22;Conference\CompleteAddress\Model\ShippingInformationManagementPlugin&#x22;
+                name=&#x22;shipping_information_management_plugin&#x22; /&#x3E;
+    &#x3C;/type&#x3E;
+&#x3C;/config&#x3E;
+    			</code></pre>
+            </section>
+           
+        </section>
+        
+        <section>
+        	<h2>Summary</h2>
+            
+            <ul>
+            	<li class="fragment">Create your own abstractions and write adapter for a framework you use</li>
+                <li class="fragment">Use decorator for customizations and delegate to your domain model</li>                
+                <li class="fragment">Use plugins only when no interface available for decoration</li>
+            </ul>
+        </section>
+       
+        <section>
+            <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+       </section>
+    </div>
+</div>
+
+
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: false,
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+			keyboard: {
+				66: 'toggleOverview',
+				33: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateLeft();
+					}
+					
+					return Reveal.navigatePrev();
+				},
+				34: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateRight();
+					}
+					
+					return Reveal.navigateNext();
+				}
+			},
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});
+		
+		var fixZoom = function () {
+			var footer = document.querySelector('.reveal > footer');
+			var slides = document.querySelector('.reveal > .slides');
+			if (footer && slides) {
+				if (slides.style.zoom) {
+					footer.style.zoom = slides.style.zoom;
+				} else if (slides.style.transform) {
+					footer.style.transform = slides.style.transform.replace(/translate\([^\)]+\)/, '');
+				}	
+			}
+		}
+		
+		Reveal.addEventListener('slidechanged', function () {
+			fixZoom();
+		});
+		
+		Reveal.addEventListener('ready', function () {
+			var slides = document.querySelectorAll('.reveal section');
+			for (var i in slides) {		
+				var slide = slides.item(i);
+				
+				if (slide.classList.contains('title-slide')) {
+					continue;
+				}
+				
+				slide.classList.add('center');
+			}
+			fixZoom();
+		});
+	});
+</script>
+
+</body>
+</html>

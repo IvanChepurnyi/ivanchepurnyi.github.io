@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>MeetMagento Sweden 2018 - Building Clustered Application in pure PHP for Magento 2</title>
+
+    <meta name="description" content="Building Clustered Application in pure PHP for Magento 2">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+
+	<style type="text/css">
+	
+section .large {
+	font-size: 1.4em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+.template {
+    display: none;
+}
+
+.reveal section footer {
+    font-size: 1.0rem;
+}
+
+.reveal footer {
+    position: absolute;
+	top: 0px;
+	left: 0px;
+	display: block;
+	width: 100%;
+}
+
+.reveal footer div {
+   position: absolute;
+}
+
+@media print {
+	
+	.reveal footer div {
+        position: fixed;
+	}
+	
+	.reveal section.title-slide > div {
+		margin-top: 20%;
+	}
+}
+
+.reveal footer .left {
+	left: 10px;
+	top: 10px;
+}
+
+.reveal footer .right {
+	top: 10px;
+	right: 10px;
+}
+.reveal pre code {
+    font-size: 0.9rem;
+	line-height: normal;
+}
+.reveal section.title-slide {
+	height: 100%;
+	position: relative;
+}
+
+.reveal section.title-slide > div {
+	position: absolute;
+	top: 30%;
+	width: 100%;
+}
+
+.reveal section.title-slide > div > * {
+	display: block;
+    float: left;
+}
+
+.reveal section.title-slide img {
+	margin: 0;
+}
+
+.reveal section.title-slide > div .flex {
+	font-size: 1.4rem;
+	max-width: 78%;
+	padding-left: 10px;
+}
+
+.reveal section.title-slide h1 {
+	font-size: 3.6em;
+	padding-bottom: 10px;
+}
+
+.reveal section.title-slide h2 {
+	font-size: 2.2em;
+	color: #2081C4;
+}
+
+.reveal section.title-slide h1, 
+.reveal section.title-slide h2,
+.reveal section.title-slide p {
+	line-height: 0.85;
+	margin: 0;
+}
+
+.reveal section.title-slide > div .left {
+	width: 20%;
+}
+</style>
+<!--[if lt IE 9]>
+<script src="lib/js/html5shiv.js"></script>
+<![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+	<footer>
+        <div class="left">Poznan 2019</div><div class="right">#magento2performance</div>
+    </footer>
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+ 
+         <section class="title-slide">
+           <div>
+           	  <div class="left"><img src="/images/logo-icon.svg" class="plain" /></div>
+              <div class="flex">
+                <h1>Finding the right way</h1>
+                <h2>among 1000's wrong</h2>
+              </div>
+           </div>
+        </section>        
+              
+	     <section>
+        	<p class="large">Every efficient solution starts from architecture</p>
+            <aside class="notes">
+            	<p>Even if your title does not contain a word architect, you are one of them</p>
+            </aside>
+        </section>
+       
+        <section>
+        	<h1>Rule #1</h1>
+            
+            <p class="large fragment">Minimize amount of I/O operations to the bare minimum</p>
+            
+            <aside class="notes">
+            	<p>Explain amount of calls to a third-party systems</p>
+                <p>Evil caching</p>
+            </aside>
+        </section>
+        
+        <section>
+        	<h1>Rule #2</h1>
+            <p class="large fragment">Make your I/O operations as lightweight as possible</p>
+        </section>
+        
+        <section>
+        	<h1>Rule #3</h1>
+            <p class="large fragment">Spend time on the requirement analysis</p>
+        </section>
+        
+        <section>
+        	<h1>Rule #4</h1>
+            <p class="large fragment">Analyse the possible data impact</p>
+        </section>
+        
+        <section>
+            <h3>Requirement #1</h3>
+            <p class="fragment">Your customer asked you to create url slugs for layered navigation. How would you implement it?</p>
+        </section>
+        
+        <section>
+             <h3>Requirement #2</h3>
+              <p class="fragment">Your customer has 200+ domain names</p>
+              <p class="fragment">Each domain has own:</p>
+             <ul>
+       	       <li class="fragment">Logo</li>
+               <li class="fragment">Categories</li>
+               <li class="fragment">Products</li>
+               <li class="fragment">Homepage</li>
+             </ul>
+        </section>
+        
+        <section>
+			<h3>Simplify</h3>
+            <p>Break down your functionality into smallest possible units</p>
+            <aside class="notes">
+               <ol>
+                  <li>Making your functionality parts simple makes it easier to optimize later on</li>
+                  <li>Overcomplicated code is much more harder to optimize</li>
+                  <li>Small units are easier to test</li>
+               </ol>
+            </aside>
+        </section>
+        
+        <section>
+        	<h3>Visualise</h3>
+            <p>Imagine size of affected entities and predict possible index sizes</p>
+            
+            <aside class="notes">
+            	<ul>
+                	<li>Learn data of your customer before implementation</li>
+                    <li>Ask them before it is not too late</li>
+                </ul>
+            </aside>
+        </section>
+        
+        <section>
+            <h3>Introduce</h3>
+            <p>Create new entities when needed</p>
+            <aside class="notes">
+            	<p>If store/website does not fit your functionality, create a new entity and use it</p>
+            </aside>
+        </section>
+        
+        <section>
+            <h3>Change</h3>
+            <p>Modify default behavior when it does not work for you</p>
+            
+            <aside class="notes">
+            	<p>If core functionality prohibits you from implementing it in the right way, change it!</p>
+            </aside>
+        </section>
+       
+        
+        <section>
+        	<h3>Share</h3>
+            <p>Talk with others and think together</p>
+            
+            <aside class="notes">
+            	<ul>
+                	<li>Talk with other members in your team</li>
+                    <li>If they don't know the right solution, they can inspire your for a right one</li>
+                </ul>
+            </aside>
+        </section>
+        
+        <section>
+            <h3>Open Discussion &amp; Some profiling</h3>
+            
+            <aside class="notes">
+            	<p>Share your specific problem with the room and lets discuss possible ways to solve this</p>
+            </aside>
+        </section>
+    </div>
+</div>
+
+
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: false,
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+			keyboard: {
+				66: 'toggleOverview',
+				33: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateLeft();
+					}
+					
+					return Reveal.navigatePrev();
+				},
+				34: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateRight();
+					}
+					
+					return Reveal.navigateNext();
+				}
+			},
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});
+		
+		var fixZoom = function () {
+			var footer = document.querySelector('.reveal > footer');
+			var slides = document.querySelector('.reveal > .slides');
+			if (footer && slides) {
+				if (slides.style.zoom) {
+					footer.style.zoom = slides.style.zoom;
+				} else if (slides.style.transform) {
+					footer.style.transform = slides.style.transform.replace(/translate\([^\)]+\)/, '');
+				}	
+			}
+		}
+		
+		Reveal.addEventListener('slidechanged', function () {
+			fixZoom();
+		});
+		
+		Reveal.addEventListener('ready', function () {
+			var slides = document.querySelectorAll('.reveal section');
+			for (var i in slides) {		
+				var slide = slides.item(i);
+				
+				if (slide.classList.contains('title-slide')) {
+					continue;
+				}
+				
+				slide.classList.add('center');
+			}
+			fixZoom();
+		});
+	});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>MageTitans NL 2019 - Building Cluster Application in pure PHP for Magento 2</title>
+
+    <meta name="description" content="Building Cluster Application in pure PHP for Magento 2">
+    <meta name="author" content="Ivan Chepurnyi">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <script>
+	window.baseUrl = '/bower_components/reveal.js';
+	
+	window.addJs = function (jsSrc, callback) {
+		var script = document.createElement('script');
+		script.src = baseUrl + jsSrc;
+		script.addEventListener('load', callback || function () {});
+		document.getElementsByTagName('body')[0].appendChild(script);
+	};
+	
+	window.addCss = function (cssSrc) {
+		var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = baseUrl + cssSrc;
+        document.getElementsByTagName('head')[0].appendChild( link );
+	}
+    </script>
+
+    <!-- Printing and PDF exports -->
+    <script>
+	    addCss('/css/reveal.css');
+		addCss('/css/theme/white.css');
+		addCss('/lib/css/zenburn.css');
+        addCss((window.location.search.match( /print-pdf/gi ) ? '/css/print/pdf.css' : '/css/print/paper.css'));
+    </script>
+
+    <!--[if lt IE 9]>
+    <script>
+	    addJs('/lib/js/html5shiv.js');
+    </script>
+    <![endif]-->
+
+	<style type="text/css">
+	
+section .large {
+	font-size: 1.4em;
+}
+
+section .x-large {
+	font-size: 2.5em;
+}
+
+.template {
+    display: none;
+}
+
+.reveal section footer {
+    font-size: 1.0rem;
+}
+
+.reveal footer {
+    position: absolute;
+	top: 0px;
+	left: 0px;
+	display: block;
+	width: 100%;
+}
+
+.reveal footer div {
+   position: absolute;
+}
+
+@media print {
+	
+	.reveal footer div {
+        position: fixed;
+	}
+	
+	.reveal section.title-slide > div {
+		margin-top: 20%;
+	}
+}
+
+.reveal footer .left {
+	left: 10px;
+	top: 10px;
+}
+
+.reveal footer .right {
+	top: 10px;
+	right: 10px;
+}
+.reveal pre code {
+    font-size: 0.9rem;
+	line-height: normal;
+}
+.reveal section.title-slide {
+	height: 100%;
+	position: relative;
+}
+
+.reveal section.title-slide > div {
+	position: absolute;
+	top: 30%;
+	width: 100%;
+}
+
+.reveal section.title-slide > div > * {
+	display: block;
+    float: left;
+}
+
+.reveal section.title-slide img {
+	margin: 0;
+}
+
+.reveal section.title-slide > div .flex {
+	font-size: 1.4rem;
+	max-width: 78%;
+	padding-left: 10px;
+}
+
+.reveal section.title-slide h1 {
+	font-size: 3.6em;
+	padding-bottom: 10px;
+}
+
+.reveal section.title-slide h2 {
+	font-size: 2.2em;
+	color: #2081C4;
+}
+
+.reveal section.title-slide h1, 
+.reveal section.title-slide h2,
+.reveal section.title-slide p {
+	line-height: 0.85;
+	margin: 0;
+}
+
+.reveal section.title-slide > div .left {
+	width: 20%;
+}
+		
+::backdrop {
+  background-color: #fff;
+}
+
+</style>
+<!--[if lt IE 9]>
+<script src="lib/js/html5shiv.js"></script>
+<![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+	<footer>
+        <div class="left">MageTitans NL 2019</div><div class="right">#magetitansnl</div>
+    </footer>
+ <!-- Any section element inside of this container is displayed as a slide -->
+ <div class="slides">
+    <section class="title-slide">
+           <div>
+           	  <div class="left"><img src="/images/logo-icon.svg" class="plain" /></div>
+              <div class="flex">
+                  <h1>Building Cluster Application</h1>
+                  <h2>In pure PHP for Magento 2</h2>
+              </div>
+           </div>
+        </section>
+        
+    <section>
+			<p>Once upon a time...</p>
+    		<aside class="notes">
+				<p>I want to tell you a story of a very intresting project I did</p>
+		   </aside>
+     	</section>
+       
+       <section>
+		   <p>A customer had issues with Magento 2 webshop...</p>
+	   </section>
+       
+       <section>
+		   <h3>About customer</h3>
+		   <ul>
+			   <li class="fragment">Fashion retailer</li>
+			   <li class="fragment">Magento CE 2.2</li>
+			   <li class="fragment">Heavy use of newsletter campaigns</li>
+			   <li class="fragment">Sells internationally</li>
+			   <li class="fragment">A lot of last pieces</li>
+		   </ul>
+	   </section>
+        
+       <section>
+		   <h2>Customer Issues</h2>
+		   <ul>
+			   <li class="fragment">Random Deadlocks During Checkout</li>
+               <li class="fragment">Stock updates from ERP were "loosing" qty of not yet exported orders</li>
+			   <li class="fragment">Customer had to perform complete stock re-count every month</li>
+			   <li class="fragment">It was easy to abuse system by creating pending orders and depleting stock for last in stock items</li>
+		   </ul>
+	   </section>
+     
+       <section>
+         <h3>The source of all evil is...</h3>
+		   <p class="fragment">...quirks of CatalogInventory implementation</p>
+	   </section>
+       
+       <section>
+		   <h3>Random Deadlocks During Checkout</h3>
+
+	     <p class="fragment"><strong>SELECT ... FOR UPDATE</strong> on every sale</p>
+		   <p class="fragment"><strong>Price &amp; Stock re-indexation </strong> on product changing stock status</p>
+		   
+		   <aside class="notes">
+			   <p>When multiple customers buy same product - happens quite often - MySQL goes into wait locks. At some point it results in deadlock.</p>
+			   <p>Indexation might trigger locks of tables in un-expected places, as some indexes use UPATE JOIN statements that might lock range of table rows, not only affected rows.</p>
+		   </aside>
+       </section>
+       
+       <section>
+	       	<h3>Inconsistentency in Stock Data</h3>
+   		    <p class="fragment">Magento 2.2 has only one qty field that is single truth for the whole process</p>
+   		    <p class="fragment">Magento MSI has only has a race condition that allows to bypass qty check</p>
+		    
+	     <aside class="notes">
+			   <p>When stock update comes from ERP, Magento might not yet export some orders. It results in wrong stock QTY. Happens very often.</p>
+		   </aside>
+       </section>
+	 
+	  <section>
+	    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 424.9 262.7" width="90%" enable-background="new 0 0 424.9 262.7" xml:space="preserve">
+<symbol  id="Org._Chart_-_Connector" viewBox="-5.7 -17.6 11.4 35.3">
+	<g>
+		<path d="M1,17.6V-8.5c1.8,1.3,3.1,1.9,4.7,2C2.9-9.4,1.4-13.1,0-17.6c-1.3,4.5-2.9,8.1-5.7,11.1c1.8-0.2,2.9-0.7,4.8-2v26.2H1z"/>
+	</g>
+</symbol>
+			<text transform="matrix(1 0 0 1 112.7698 15.0657)" font-family="'MyriadPro-Regular'" font-size="18px">CatalogInventory Behaviour</text>
+
+
+<g class="fragment">
+	
+		<rect x="0.5" y="95.9" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 40.5967 116.2658)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Stock Item </tspan><tspan x="6.3" y="12" font-family="'MyriadPro-Regular'" font-size="10px">Product 1</tspan></text>
+	
+		<rect x="0.5" y="152" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 38.2762 170.2185)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Stock Item </tspan><tspan x="6.3" y="12" font-family="'MyriadPro-Regular'" font-size="10px">Product 2</tspan></text>
+</g>
+			
+			<g class="fragment">
+	
+		<rect x="290.3" y="49.1" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 306.1091 75.0712)" font-family="'MyriadPro-Regular'" font-size="12px">Visitor Places Order</text>
+</g>
+
+		
+<g class="fragment">
+	<text transform="matrix(1 0 0 1 148.6386 111.202)" font-family="'MyriadPro-Regular'" font-size="10px">Locks all ordered items on read</text>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(-6.456957e-03 -0.9246 -2.2295 1.556886e-02 213.4166 125.2331)" overflow="visible"/>
+	<g>
+		<g>
+			
+				<rect x="290.3" y="130.7" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+			<text transform="matrix(1.1076 0 0 1 303.8029 156.6082)" font-family="'MyriadPro-Regular'" font-size="12px">Validates Stock Item</text>
+		</g>
+		
+			<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 397.5736 111.2028)" overflow="visible"/>
+		
+			<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 316.9844 111.2028)" overflow="visible"/>
+	</g>
+</g>
+			<g class="fragment">
+	<text transform="matrix(1 0 0 1 162.0431 155.6625)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="10px">Quantities are deducted </tspan><tspan x="16.3" y="12" font-family="'MyriadPro-Regular'" font-size="10px">from Stock Items</tspan></text>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(4.052875e-03 0.9246 2.2296 -9.771865e-03 209.7982 179.4454)" overflow="visible"/>
+</g>	
+			
+<g class="fragment">
+	<g>
+		
+			<rect x="290.3" y="219.6" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+		<text transform="matrix(1.1076 0 0 1 329.0627 240.9083)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Reindexes</tspan><tspan x="-6.9" y="9.6" font-family="'MyriadPro-Regular'" font-size="8px"> Price &amp; Stock Index</tspan></text>
+	</g>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 396.1852 196.4418)" overflow="visible"/>
+	<text transform="matrix(1.1076 0 0 1 327.8505 194.5926)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="8px">If item becomes</tspan><tspan x="6.2" y="9.6" font-family="'MyriadPro-Regular'" font-size="8px"> out of stock</tspan></text>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 315.596 196.4418)" overflow="visible"/>
+</g>
+</svg>
+
+   	  </section>
+	 
+    <section>
+	  <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 424.9 264.4" enable-background="new 0 0 424.9 264.4" xml:space="preserve">
+<symbol  id="Org._Chart_-_Connector" viewBox="-5.7 -17.6 11.4 35.3">
+	<g>
+		<path d="M1,17.6V-8.5c1.8,1.3,3.1,1.9,4.7,2C2.9-9.4,1.4-13.1,0-17.6c-1.3,4.5-2.9,8.1-5.7,11.1c1.8-0.2,2.9-0.7,4.8-2v26.2H1z"/>
+	</g>
+</symbol>
+
+<text transform="matrix(1 0 0 1 157.3324 15.0658)" font-family="'MyriadPro-Regular'" font-size="18px">MSI Behaviour</text>
+<g class="fragment">
+	
+		<rect x="0.5" y="95.9" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 34.1904 116.2658)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Stock Source </tspan><tspan x="12.1" y="12" font-family="'MyriadPro-Regular'" font-size="10px">Product 1</tspan></text>
+	
+		<rect x="0.5" y="152" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 31.87 170.2185)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Stock Source </tspan><tspan x="12.1" y="12" font-family="'MyriadPro-Regular'" font-size="10px">Product 2</tspan></text>
+</g>
+			
+			  <g class="fragment">
+	
+		<rect x="290.3" y="49.1" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 315.0319 75.0712)" font-family="'MyriadPro-Regular'" font-size="10px">Visitor Places Order</text>
+</g>
+			  <g class="fragment">
+				    <g >
+<text transform="matrix(1 0 0 1 167.5203 133.8206)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="10px">Receive available qty </tspan><tspan x="-5.2" y="12" font-family="'MyriadPro-Regular'" font-size="10px"> + aggregate all current </tspan><tspan x="19.1" y="24" font-family="'MyriadPro-Regular'" font-size="10px">reservations</tspan></text>
+<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(-6.456957e-03 -0.9246 -2.2295 1.556886e-02 212.0637 168.1166)" overflow="visible"/>
+			  </g>
+	<g>
+		
+			<rect x="290.3" y="130.7" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+		<text transform="matrix(1.1076 0 0 1 329.2595 156.6082)" font-family="'MyriadPro-Regular'" font-size="10px">Validates Qty</text>
+	</g>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 397.5736 111.2028)" overflow="visible"/>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 316.9844 111.2028)" overflow="visible"/>
+</g>
+<g class="fragment">
+	<g>
+		
+			<rect x="290.3" y="221.3" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+		<text transform="matrix(1.1076 0 0 1 319.2803 242.6054)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="10px">Creates Negative </tspan><tspan x="10" y="12" font-family="'MyriadPro-Regular'" font-size="10px">Reservations</tspan></text>
+	</g>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 396.1852 196.4418)" overflow="visible"/>
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(0.9246 -7.750008e-03 -7.315479e-03 -0.8725 315.596 196.4418)" overflow="visible"/>
+</g>
+
+</svg>
+   	  </section>
+	 
+	 <section>
+		 <p>MSI clears all history of mutations</p>
+		 <pre><code class="php" data-trim>
+public function execute(): void
+{
+	$connection = $this->resource->getConnection();
+	$reservationTable = $this->resource->getTableName('inventory_reservation');
+
+	$select = $connection->select()
+		->from(
+			$reservationTable,
+			['GROUP_CONCAT(' . ReservationInterface::RESERVATION_ID . ')']
+		)
+		->group([ReservationInterface::STOCK_ID, ReservationInterface::SKU])
+		->having('SUM(' . ReservationInterface::QUANTITY . ') = 0');
+		$connection->query('SET group_concat_max_len = ' . $this->groupConcatMaxLen);
+	$groupedReservationIds = implode(',', $connection->fetchCol($select));
+
+	$condition = [
+		ReservationInterface::RESERVATION_ID . ' IN (?)' 
+			=> explode(',', $groupedReservationIds)
+		];
+	$connection->delete($reservationTable, $condition);
+}
+		 </code></pre>
+	 </section>
+        
+       <section>
+		   <p>So I had <strong>3 different options</strong> to fix customer's issue</p>
+   	   </section>
+   	   
+	   <section>
+		   <p>Completely disable stock processing</p>
+		   <aside class="notes">
+			   <p>No stock data no problems, all data comes from ERP</p>
+			   <p>Customer would have to refund customers himself</p>
+		   </aside>
+   	   </section>
+	 
+	 
+	  <section>
+		  <p>Ping ERP on every stock calculation</p>
+		  
+		  <aside class="notes">
+			  <p>Not an option, as ERP's are not built for that kind of load</p>
+		  </aside>
+      </section>
+	 
+	 <section>
+	   <p>Build an async PHP application cluster with EventSourcing </p>
+	   <aside class="notes">
+			  <p>Complete transparancy of all stock mutations</p>
+		  </aside>
+    </section>
+	 
+	<section>
+		<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 459.5 279.4" enable-background="new 0 0 459.5 279.4" xml:space="preserve">
+<symbol  id="Org._Chart_-_Connector" viewBox="-5.7 -17.6 11.4 35.3">
+	<g>
+		<path d="M1,17.6V-8.5c1.8,1.3,3.1,1.9,4.7,2C2.9-9.4,1.4-13.1,0-17.6c-1.3,4.5-2.9,8.1-5.7,11.1c1.8-0.2,2.9-0.7,4.8-2v26.2H1z"/>
+	</g>
+</symbol>
+<text transform="matrix(1 0 0 1 107.7261 15.0657)" font-family="'MyriadPro-Regular'" font-size="18px">Clustered ES Application Timeline</text>
+<g class="fragment">
+	
+		<rect x="0.5" y="43.6" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 41.9465 69.5112)" font-family="'MyriadPro-Regular'" font-size="12px">Epoch 1</text>
+</g>
+<g class="fragment">
+	
+		<rect x="0.5" y="132.6" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="146.3"/>
+	<text transform="matrix(1.1076 0 0 1 45.8143 153.4663)" font-family="'MyriadPro-Regular'" font-size="12px">Events</text>
+	<text transform="matrix(1.1076 0 0 1 12.501 174.3701)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Ordered SKU1 </tspan><tspan x="0" y="14.4" font-family="'MyriadPro-Regular'" font-size="12px">UpdateItem SKU2</tspan><tspan x="0" y="28.8" font-family="'MyriadPro-Regular'" font-size="12px">Adjustment SKU1 </tspan><tspan x="0" y="43.2" font-family="'MyriadPro-Regular'" font-size="12px">Returned SKU3</tspan><tspan x="0" y="57.6" font-family="'MyriadPro-Regular'" font-size="12px">Shipped SKU2</tspan><tspan x="0" y="72" font-family="'MyriadPro-Regular'" font-size="12px">Cancelled SKU4</tspan><tspan x="0" y="86.4" font-family="'MyriadPro-Regular'" font-size="12px">....</tspan></text>
+</g>
+<g class="fragment">
+	
+		<rect x="161.1" y="43.6" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 204.0739 69.5115)" font-family="'MyriadPro-Regular'" font-size="12px">Epoch 2</text>
+</g>
+<g class="fragment">
+	
+		<rect x="161.1" y="131.9" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="146.3"/>
+	<text transform="matrix(1.1076 0 0 1 206.4639 152.7153)" font-family="'MyriadPro-Regular'" font-size="12px">Events</text>
+	<text transform="matrix(1.1076 0 0 1 173.1506 173.6191)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Ordered SKU1 </tspan><tspan x="0" y="14.4" font-family="'MyriadPro-Regular'" font-size="12px">UpdateItem SKU2</tspan><tspan x="0" y="28.8" font-family="'MyriadPro-Regular'" font-size="12px">Adjustment SKU1 </tspan><tspan x="0" y="43.2" font-family="'MyriadPro-Regular'" font-size="12px">Returned SKU3</tspan><tspan x="0" y="57.6" font-family="'MyriadPro-Regular'" font-size="12px">Shipped SKU2</tspan><tspan x="0" y="72" font-family="'MyriadPro-Regular'" font-size="12px">Cancelled SKU4</tspan><tspan x="0" y="86.4" font-family="'MyriadPro-Regular'" font-size="12px">....</tspan></text>
+</g>
+<g class="fragment">
+	
+		<rect x="321.8" y="43.6" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="42.6"/>
+	<text transform="matrix(1.1076 0 0 1 364.7235 69.5115)" font-family="'MyriadPro-Regular'" font-size="12px">Epoch 3</text>
+</g>
+<g class="fragment">
+	
+		<rect x="324.9" y="131.9" fill="#E6E7E8" stroke="#000000" stroke-linecap="round" stroke-miterlimit="10" width="134.1" height="146.3"/>
+	<text transform="matrix(1.1076 0 0 1 370.1695 152.7153)" font-family="'MyriadPro-Regular'" font-size="12px">Events</text>
+	<text transform="matrix(1.1076 0 0 1 336.8561 173.6191)"><tspan x="0" y="0" font-family="'MyriadPro-Regular'" font-size="12px">Ordered SKU1 </tspan><tspan x="0" y="14.4" font-family="'MyriadPro-Regular'" font-size="12px">UpdateItem SKU2</tspan><tspan x="0" y="28.8" font-family="'MyriadPro-Regular'" font-size="12px">Adjustment SKU1 </tspan><tspan x="0" y="43.2" font-family="'MyriadPro-Regular'" font-size="12px">Returned SKU3</tspan><tspan x="0" y="57.6" font-family="'MyriadPro-Regular'" font-size="12px">Shipped SKU2</tspan><tspan x="0" y="72" font-family="'MyriadPro-Regular'" font-size="12px">Cancelled SKU4</tspan><tspan x="0" y="86.4" font-family="'MyriadPro-Regular'" font-size="12px">....</tspan></text>
+</g>
+<g class="fragment">
+	
+		<use xlink:href="#Org._Chart_-_Connector"  width="11.4" height="35.3" x="-5.7" y="-17.6" transform="matrix(-6.456957e-03 -0.9246 -2.2295 1.556886e-02 372.0737 108.0984)" overflow="visible"/>
+	
+		<line fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-miterlimit="10" x1="388.6" y1="107.9" x2="34.5" y2="108.9"/>
+</g>
+</svg>
+
+	</section>
+	 
+    <section>
+		<h3>Database Design</h3>
+    </section>
+	 
+	 <section>
+		 <p>Epoch</p>
+		 <pre><code class="bash" data-trim>
++------------+------------------+------+-----+---------+----------------+
+| Field      | Type             | Null | Key | Default | Extra          |
++------------+------------------+------+-----+---------+----------------+
+| epoch_id   | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| started_at | datetime         | NO   | MUL | NULL    |                |
+| ended_at   | datetime         | YES  |     | NULL    |                |
++------------+------------------+------+-----+---------+----------------+
+		 </code></pre>
+
+	 <p>Epoch Events</p>
+	 <pre><code class="bash" data-trim>
++--------------+------------------+------+-----+---------+----------------+
+| Field        | Type             | Null | Key | Default | Extra          |
++--------------+------------------+------+-----+---------+----------------+
+| event_id     | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
+| occured_at   | datetime         | NO   | MUL | NULL    |                |
+| event_type   | varchar(255)     | NO   |     | NULL    |                |
+| aggregate_id | varchar(255)     | NO   | MUL | NULL    |                |
+| event_data   | text             | NO   |     | NULL    |                |
++--------------+------------------+------+-----+---------+----------------+
+		 </code></pre>
+	 </section>
+	 
+	 <section>
+		 <p>Aggregate</p>
+		 <pre><code class="bash" data-trim>
++------------------+---------------------+------+-----+---------+-------+
+| Field            | Type                | Null | Key | Default | Extra |
++------------------+---------------------+------+-----+---------+-------+
+| aggregate_id     | varchar(255)        | NO   | PRI | NULL    |       |
+| last_event_id    | int(10) unsigned    | NO   |     | NULL    |       |
+| last_event_epoch | int(10) unsigned    | NO   | MUL | NULL    |       |
+| qty_reserved     | int(11)             | NO   |     | 0       |       |
+| qty_on_hand      | int(11)             | NO   |     | 0       |       |
+| is_in_stock      | tinyint(3) unsigned | YES  |     | 0       |       |
++------------------+---------------------+------+-----+---------+-------+
+		 </code></pre>
+	 </section>
+	 
+       <section>
+           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 463.42 214.83">
+  <defs>
+    <symbol id="a" data-name="Org. Chart - Connector" viewBox="0 0 11.39 35.28">
+      <path d="M6.69,0V26.14c1.85-1.26,3.06-1.88,4.7-1.95C8.56,27.06,7.08,30.78,5.7,35.28,4.37,30.78,2.75,27.22,0,24.19a9.89,9.89,0,0,1,4.83,2V0Z" fill="#231f20"/>
+    </symbol>
+  </defs>
+  <title>Async-Stock-Service</title>
+  
+  <g>
+    <rect x="8.84" y="29.49" width="134.13" height="42.63" fill="#e6e7e8" stroke="#231f20" stroke-linecap="round" stroke-miterlimit="10"/>
+    <g>
+      <path d="M125.6,189.46c-.07-1.13-.15-2.48-.14-3.49h0c-.3.95-.68,1.95-1.13,3.07L122.71,193h-.88l-1.44-3.85a31.85,31.85,0,0,1-1-3.14h0c0,1-.09,2.36-.17,3.57l-.24,3.47h-1.1l.62-8.08h1.48l1.53,3.91c.37,1,.67,1.88.9,2.72h0a26.25,26.25,0,0,1,.94-2.72l1.6-3.91h1.47L127,193h-1.13Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M132.33,193l-.09-.73h0a2.51,2.51,0,0,1-2,.86,1.75,1.75,0,0,1-2-1.67c0-1.4,1.38-2.17,3.86-2.15v-.12c0-.48-.14-1.35-1.46-1.35a3.48,3.48,0,0,0-1.67.43l-.27-.69a4.37,4.37,0,0,1,2.12-.52,2.15,2.15,0,0,1,2.44,2.38v2.17a7.39,7.39,0,0,0,.11,1.39Zm-.17-3c-1.27,0-2.72.18-2.72,1.3a1,1,0,0,0,1.1,1,1.61,1.61,0,0,0,1.56-1,1.35,1.35,0,0,0,.06-.34Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M140.72,187.21c0,.41-.05.88-.05,1.59v3.37a3.12,3.12,0,0,1-.92,2.65,3.64,3.64,0,0,1-2.34.7,4.54,4.54,0,0,1-2.14-.48l.29-.81a3.94,3.94,0,0,0,1.89.46,1.84,1.84,0,0,0,2.07-2V192h0a2.37,2.37,0,0,1-2.05,1,2.72,2.72,0,0,1-2.74-2.83,2.92,2.92,0,0,1,2.9-3.09,2.19,2.19,0,0,1,2,1h0l.06-.87Zm-1.21,2.29a1.21,1.21,0,0,0-.07-.48,1.65,1.65,0,0,0-1.63-1.12,2,2,0,0,0-1.91,2.2,1.88,1.88,0,0,0,1.9,2.08,1.71,1.71,0,0,0,1.62-1.08,1.82,1.82,0,0,0,.09-.56Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M143.26,190.3a2,2,0,0,0,2.21,2,4.62,4.62,0,0,0,1.78-.3l.2.76a5.71,5.71,0,0,1-2.14.36,2.85,2.85,0,0,1-3.17-2.93,2.94,2.94,0,0,1,3-3.13,2.55,2.55,0,0,1,2.66,2.74,4.35,4.35,0,0,1,0,.49Zm3.43-.76a1.55,1.55,0,0,0-1.62-1.71,1.84,1.84,0,0,0-1.8,1.71Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M149.27,188.78c0-.6,0-1.1-.06-1.57h1l.07.95h0a2.43,2.43,0,0,1,2.13-1.09,2.2,2.2,0,0,1,2.27,2.47V193h-1.17v-3.35c0-.93-.38-1.71-1.49-1.71a1.63,1.63,0,0,0-1.56,1.08,1.23,1.23,0,0,0-.08.49V193h-1.17Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M158,185.54v1.67h1.67v.8H158v3.13c0,.72.23,1.13.88,1.13a2.67,2.67,0,0,0,.68-.08l.05.8a3.33,3.33,0,0,1-1,.14,1.75,1.75,0,0,1-1.26-.44,2,2,0,0,1-.45-1.52V188h-1v-.8h1v-1.4Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M166.73,190.06a3,3,0,0,1-3.2,3.08,2.9,2.9,0,0,1-3.08-3,3,3,0,0,1,3.19-3.09A2.89,2.89,0,0,1,166.73,190.06Zm-5.1.06a2,2,0,1,0,2-2.26A2,2,0,0,0,161.63,190.12Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M170.65,193v-.65l.92-.8c2.21-1.9,3.2-2.9,3.22-4.08,0-.79-.43-1.52-1.72-1.52a3.12,3.12,0,0,0-1.83.66l-.37-.75a4,4,0,0,1,2.44-.79c1.86,0,2.65,1.15,2.65,2.27,0,1.44-1.16,2.6-3,4.18l-.69.58v0h3.88V193Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M102.38,199.33v8.08h-1.15v-8.08Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M104.5,203.18c0-.6,0-1.1-.06-1.58h1l.07,1h0a2.43,2.43,0,0,1,2.13-1.09,2.2,2.2,0,0,1,2.27,2.47v3.47H108.8v-3.35c0-.93-.38-1.71-1.49-1.71a1.62,1.62,0,0,0-1.56,1.08,1.23,1.23,0,0,0-.08.49v3.49H104.5Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M112.15,201.6l1.26,3.27a11.45,11.45,0,0,1,.52,1.48h0c.15-.48.33-1,.55-1.48l1.25-3.27H117l-2.53,5.81h-1.11l-2.45-5.81Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M118.61,204.7a2,2,0,0,0,2.21,2,4.62,4.62,0,0,0,1.78-.3l.2.76a5.66,5.66,0,0,1-2.14.36,2.85,2.85,0,0,1-3.17-2.93,2.94,2.94,0,0,1,3-3.13,2.55,2.55,0,0,1,2.66,2.74,4.35,4.35,0,0,1,0,.49Zm3.43-.76a1.55,1.55,0,0,0-1.62-1.71,1.84,1.84,0,0,0-1.8,1.71Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M124.62,203.18c0-.6,0-1.1-.05-1.58h1l.07,1h0a2.4,2.4,0,0,1,2.12-1.09,2.2,2.2,0,0,1,2.27,2.47v3.47h-1.17v-3.35c0-.93-.38-1.71-1.48-1.71a1.64,1.64,0,0,0-1.57,1.08,1.23,1.23,0,0,0-.08.49v3.49h-1.17Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M133.35,199.94v1.66H135v.81h-1.68v3.13c0,.72.23,1.13.88,1.13a2.67,2.67,0,0,0,.68-.08l.05.8a3.33,3.33,0,0,1-1,.14,1.75,1.75,0,0,1-1.26-.44,2,2,0,0,1-.45-1.52v-3.16h-1v-.81h1v-1.39Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M142.08,204.46a3,3,0,0,1-3.2,3.08,2.9,2.9,0,0,1-3.08-3,3,3,0,0,1,3.19-3.09A2.89,2.89,0,0,1,142.08,204.46Zm-5.1.06a2,2,0,1,0,2-2.26A2,2,0,0,0,137,204.52Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M143.56,203.42c0-.69,0-1.28-.05-1.82h1l0,1.14h.05a1.91,1.91,0,0,1,1.78-1.27,1.18,1.18,0,0,1,.34,0v1a2.33,2.33,0,0,0-.4,0,1.57,1.57,0,0,0-1.57,1.35,2.57,2.57,0,0,0-.05.5v3.09h-1.16Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M148.66,201.6l1.41,3.44c.15.38.31.83.41,1.18h0c.12-.35.25-.79.41-1.21l1.28-3.41h1.23l-1.75,4.14c-.84,2-1.41,3-2.21,3.64a3.38,3.38,0,0,1-1.43.68l-.29-.89a3.25,3.25,0,0,0,2-1.69.63.63,0,0,0,.1-.25,1,1,0,0,0-.08-.28l-2.38-5.35Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M162.09,203.86c-.07-1.13-.15-2.48-.14-3.49h0c-.3.95-.67,1.95-1.13,3.07l-1.58,3.92h-.87l-1.45-3.85a31.85,31.85,0,0,1-1-3.14h0c0,1-.09,2.36-.17,3.57l-.24,3.47h-1.1l.62-8.08h1.48l1.53,3.91c.37,1,.67,1.88.9,2.72h0c.23-.82.55-1.7.94-2.72l1.6-3.91h1.47l.56,8.08h-1.13Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M168.83,207.41l-.1-.73h0a2.5,2.5,0,0,1-2,.86,1.76,1.76,0,0,1-2-1.67c0-1.4,1.38-2.17,3.87-2.15v-.12c0-.48-.15-1.35-1.47-1.35a3.51,3.51,0,0,0-1.67.43l-.27-.69a4.4,4.4,0,0,1,2.12-.52,2.15,2.15,0,0,1,2.44,2.38V206a7.39,7.39,0,0,0,.11,1.39Zm-.18-3c-1.27,0-2.72.18-2.72,1.3a1,1,0,0,0,1.1,1,1.61,1.61,0,0,0,1.56-1,1,1,0,0,0,.06-.34Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M171.67,203.18c0-.6,0-1.1,0-1.58h1l.07,1h0a2.41,2.41,0,0,1,2.12-1.09,2.21,2.21,0,0,1,2.28,2.47v3.47H176v-3.35c0-.93-.39-1.71-1.49-1.71a1.64,1.64,0,0,0-1.57,1.08,1.44,1.44,0,0,0-.08.49v3.49h-1.17Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M184.59,201.6c0,.42-.05.89-.05,1.6v3.37a3.15,3.15,0,0,1-.92,2.65,3.66,3.66,0,0,1-2.34.7,4.54,4.54,0,0,1-2.14-.48l.29-.81a3.94,3.94,0,0,0,1.89.46,1.84,1.84,0,0,0,2.07-2v-.65h0a2.37,2.37,0,0,1-2.05,1,2.71,2.71,0,0,1-2.74-2.83,2.91,2.91,0,0,1,2.9-3.09,2.19,2.19,0,0,1,2,1h0l.06-.88Zm-1.21,2.3a1.21,1.21,0,0,0-.07-.48,1.65,1.65,0,0,0-1.63-1.12,2,2,0,0,0-1.92,2.2,1.88,1.88,0,0,0,1.91,2.08,1.72,1.72,0,0,0,1.62-1.08,1.82,1.82,0,0,0,.09-.56Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M187.13,204.7a2,2,0,0,0,2.2,2,4.54,4.54,0,0,0,1.78-.3l.2.76a5.62,5.62,0,0,1-2.14.36A2.84,2.84,0,0,1,186,204.6a2.94,2.94,0,0,1,3-3.13,2.55,2.55,0,0,1,2.66,2.74,4.35,4.35,0,0,1,0,.49Zm3.43-.76a1.55,1.55,0,0,0-1.62-1.71,1.83,1.83,0,0,0-1.8,1.71Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+      <path d="M193.14,203.42c0-.69,0-1.28-.06-1.82h1l0,1.14h0a1.91,1.91,0,0,1,1.78-1.27,1.11,1.11,0,0,1,.33,0v1a2.33,2.33,0,0,0-.4,0,1.56,1.56,0,0,0-1.56,1.35,2.54,2.54,0,0,0-.06.5v3.09h-1.15Z" transform="translate(-72.46 -146.21)" fill="#231f20"/>
+    </g>
+  </g>
+			<g class="fragment">   
+  <line x1="75.91" y1="72.12" x2="75.91" y2="115.53" fill="none"/>
+  <use width="11.39" height="35.28" transform="translate(55.11 71.98) scale(1 1.28)" xlink:href="#a"/>
+  <use width="11.39" height="35.28" transform="matrix(-0.81, -0.02, 0.03, -1.24, 84.42, 115.74)" xlink:href="#a"/>
+  <text transform="translate(6.7 97.52)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro" letter-spacing="-0.01em">C<tspan x="5.69" y="0" letter-spacing="0em">ommands</tspan></text>
+  <text transform="translate(104.04 97.52)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="-0.01em">E</tspan><tspan x="4.85" y="0" letter-spacing="-0.01em">v</tspan><tspan x="9.56" y="0">e</tspan><tspan x="14.57" y="0" letter-spacing="0em">n</tspan><tspan x="20.08" y="0">ts</tspan></text>
+			   <g>
+    <rect x="8.84" y="117.2" width="134.13" height="42.63" fill="#e6e7e8" stroke="#231f20" stroke-linecap="round" stroke-miterlimit="10"/>
+    <text transform="translate(50.58 138.51) scale(1.11 1)" font-size="12" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro">H<tspan x="7.82" y="0" letter-spacing="0.04em">T</tspan><tspan x="14.24" y="0">TP API</tspan><tspan font-size="10"><tspan x="-13.47" y="12" letter-spacing="-0.01em">A</tspan><tspan x="-7.41" y="12">sync PHP </tspan><tspan x="32.69" y="12" letter-spacing="0.01em">S</tspan><tspan x="37.68" y="12">e</tspan><tspan x="42.69" y="12" letter-spacing="0.02em">r</tspan><tspan x="46.21" y="12" letter-spacing="-0.01em">v</tspan><tspan x="50.92" y="12" letter-spacing="0em">er</tspan></tspan></text>
+  </g>
+			   </g>
+  <g class="fragment">
+    <rect x="328.79" y="30.39" width="134.13" height="42.63" fill="#e6e7e8" stroke="#231f20" stroke-linecap="round" stroke-miterlimit="10"/>
+    <rect x="323.96" y="36.7" width="134.13" height="42.63" fill="#e6e7e8" stroke="#231f20" stroke-linecap="round" stroke-miterlimit="10"/>
+    <g>
+      <rect x="318.08" y="43.43" width="134.13" height="42.63" fill="#e6e7e8" stroke="#231f20" stroke-linecap="round" stroke-miterlimit="10"/>
+      <text transform="translate(328.05 61.74) scale(1.11 1)" font-size="12" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="-0.01em">C</tspan><tspan x="6.83" y="0">ommand </tspan><tspan x="55.19" y="0" letter-spacing="-0.02em">P</tspan><tspan x="61.38" y="0" letter-spacing="-0.01em">r</tspan><tspan x="65.18" y="0" letter-spacing="0em">o</tspan><tspan x="71.77" y="0" letter-spacing="-0.01em">c</tspan><tspan x="77.08" y="0" letter-spacing="0em">essor</tspan><tspan font-size="10"><tspan x="15.22" y="12" letter-spacing="-0.01em">A</tspan><tspan x="21.28" y="12">sync PHP </tspan><tspan x="61.38" y="12" letter-spacing="0.01em">S</tspan><tspan x="66.37" y="12">e</tspan><tspan x="71.38" y="12" letter-spacing="0.02em">r</tspan><tspan x="74.9" y="12" letter-spacing="-0.01em">v</tspan><tspan x="79.61" y="12" letter-spacing="0em">er</tspan></tspan></text>
+    </g>
+  </g>
+  <g class="fragment">
+	      <text transform="translate(32.88 180.15)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro">Dist<tspan x="16.27" y="0" letter-spacing="0em">r</tspan><tspan x="19.58" y="0">ibu</tspan><tspan x="33.12" y="0" letter-spacing="-0.01em">t</tspan><tspan x="36.37" y="0" letter-spacing="0em">es </tspan><tspan x="47.46" y="0" letter-spacing="-0.01em">c</tspan><tspan x="51.88" y="0" letter-spacing="0em">ommands </tspan><tspan x="-32.88" y="12">based on </tspan><tspan x="7.52" y="12" letter-spacing="-0.01em">c</tspan><tspan x="11.94" y="12">onsis</tspan><tspan x="33.23" y="12" letter-spacing="-0.01em">t</tspan><tspan x="36.48" y="12">e</tspan><tspan x="41.49" y="12" letter-spacing="0em">n</tspan><tspan x="47" y="12">t hashing algo</tspan><tspan x="106.17" y="12" letter-spacing="0em">r</tspan><tspan x="109.48" y="12" letter-spacing="0em">ithm</tspan></text>
+  <use width="11.39" height="35.28" transform="matrix(0, -0.92, 2.23, 0, 187.49, 81.66)" xlink:href="#a"/>
+  <text transform="translate(186.46 67.05)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro">Single <tspan x="27.9" y="0" letter-spacing="-0.01em">C</tspan><tspan x="33.59" y="0" letter-spacing="0em">ommand</tspan></text></g>
+			   <text transform="translate(323.96 10.04)" font-size="12" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="0em">S</tspan><tspan x="5.88" y="0" letter-spacing="-0.01em">t</tspan><tspan x="9.78" y="0">ock </tspan><tspan x="29.92" y="0" letter-spacing="0.01em">S</tspan><tspan x="35.9" y="0">e</tspan><tspan x="41.92" y="0" letter-spacing="0.03em">r</tspan><tspan x="46.14" y="0" letter-spacing="0em">vi</tspan><tspan x="54.72" y="0" letter-spacing="-0.01em">c</tspan><tspan x="60.02" y="0">e</tspan><tspan x="66.04" y="0" letter-spacing="-0.04em"> </tspan><tspan x="68.15" y="0" letter-spacing="-0.03em">W</tspan><tspan x="77.9" y="0">o</tspan><tspan x="84.49" y="0" letter-spacing="0em">r</tspan><tspan x="88.46" y="0">ker Node</tspan></text>
+			   <text transform="translate(12.58 12.2)" font-size="12" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="0.01em">M</tspan><tspan x="9.72" y="0" letter-spacing="0em">age</tspan><tspan x="28.22" y="0" letter-spacing="0em">n</tspan><tspan x="34.84" y="0" letter-spacing="-0.01em">t</tspan><tspan x="38.74" y="0">o </tspan><tspan x="47.87" y="0" letter-spacing="-0.03em">F</tspan><tspan x="53.4" y="0" letter-spacing="-0.01em">r</tspan><tspan x="57.2" y="0">o</tspan><tspan x="63.79" y="0" letter-spacing="0em">n</tspan><tspan x="70.4" y="0" letter-spacing="-0.01em">t</tspan><tspan x="74.3" y="0" letter-spacing="0em">end Node</tspan></text>
+<g class="fragment">
+  <use width="11.39" height="35.28" transform="translate(340.87 86.06) scale(1.09 1.69)" xlink:href="#a"/>
+  <text transform="translate(373.26 109.34)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="-0.01em">E</tspan><tspan x="4.85" y="0" letter-spacing="-0.01em">v</tspan><tspan x="9.56" y="0">e</tspan><tspan x="14.57" y="0" letter-spacing="0em">n</tspan><tspan x="20.08" y="0">ts &amp;</tspan><tspan x="-6.19" y="12" letter-spacing="-0.01em">A</tspan><tspan x="-0.19" y="12">g</tspan><tspan x="5.4" y="12" letter-spacing="-0.01em">g</tspan><tspan x="10.94" y="12" letter-spacing="-0.01em">r</tspan><tspan x="14.1" y="12">eg</tspan><tspan x="24.7" y="12" letter-spacing="0em">a</tspan><tspan x="29.48" y="12" letter-spacing="-0.01em">t</tspan><tspan x="32.73" y="12">es</tspan></text>
+  <use width="11.39" height="35.28" transform="matrix(-1.09, 0.01, -0.02, -1.69, 435.95, 145.53)" xlink:href="#a"/>
+  <use width="11.39" height="35.28" transform="matrix(0, 0.92, -2.23, 0, 259.72, 102.89)" xlink:href="#a"/>
+  <text transform="translate(194.74 98.7)" font-size="10" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro">Single <tspan x="27.9" y="0" letter-spacing="-0.01em">E</tspan><tspan x="32.75" y="0" letter-spacing="-0.01em">v</tspan><tspan x="37.46" y="0">e</tspan><tspan x="42.47" y="0" letter-spacing="0em">n</tspan><tspan x="47.98" y="0" letter-spacing="0em">t</tspan></text>
+  
+  
+    <text transform="translate(332.88 210.17)" font-size="12" fill="#231f20" font-family="MyriadPro-Regular, Myriad Pro"><tspan letter-spacing="0em">S</tspan><tspan x="5.88" y="0" letter-spacing="-0.01em">t</tspan><tspan x="9.78" y="0">ock </tspan><tspan x="29.92" y="0" letter-spacing="0.01em">S</tspan><tspan x="35.9" y="0">e</tspan><tspan x="41.92" y="0" letter-spacing="0.03em">r</tspan><tspan x="46.14" y="0">vi</tspan><tspan x="54.72" y="0" letter-spacing="-0.01em">c</tspan><tspan x="60.02" y="0">e DB Node</tspan></text>
+    <path d="M419.52,339.2h2.9V327.05L427,337.64a2.91,2.91,0,0,0,5.34,0l4.51-10.59V339.2h2.92V327.05a1.86,1.86,0,0,0-1.38-2.05c-2.21-.7-3.69-.09-4.36,1.49L429.54,337l-4.28-10.47c-.65-1.58-2.15-2.19-4.38-1.49a1.86,1.86,0,0,0-1.36,2.05V339.2Zm22.61-9.88h2.92V336c0,.38.11,1.23,1.7,1.25.82,0,6.29,0,6.34,0v-8H456v10.92c0,2.69-3.15,3.27-4.62,3.3H442.2v-2.05h9.21c1.88-.22,1.66-1.21,1.66-1.54v-.8h-6.19c-2.88,0-4.73-1.36-4.75-2.9,0-.14.07-6.84,0-6.88Zm62.71-7.74a10.1,10.1,0,0,0-4.33.66c-.33.15-.87.15-.91.59.18.19.2.5.36.76a5.22,5.22,0,0,0,1.16,1.44c.47.37.93.75,1.43,1.08.87.57,1.85.9,2.7,1.46.49.33,1,.76,1.47,1.11.25.19.4.5.71.61v-.07c-.15-.21-.2-.52-.35-.75l-.67-.68a11,11,0,0,0-2.32-2.39c-.72-.52-2.28-1.22-2.57-2.1l0,0a9,9,0,0,0,1.55-.38c.75-.21,1.45-.16,2.23-.38.36-.1.71-.21,1.07-.33V322c-.4-.42-.69-1-1.12-1.39a30.27,30.27,0,0,0-3.68-2.9c-.69-.47-1.59-.78-2.32-1.18-.27-.14-.72-.21-.87-.45a9.92,9.92,0,0,1-.92-1.81c-.64-1.3-1.27-2.74-1.83-4.1a23.85,23.85,0,0,0-1.14-2.69,23,23,0,0,0-8.63-8.82,10.25,10.25,0,0,0-2.86-1c-.56,0-1.11-.07-1.67-.09a9.34,9.34,0,0,1-1-.83c-1.27-.85-4.55-2.69-5.49-.26-.6,1.54.89,3,1.41,3.82a11,11,0,0,1,1.13,1.77c.16.4.21.83.36,1.25a29.67,29.67,0,0,0,1.16,3.16,12.24,12.24,0,0,0,.83,1.46c.18.26.49.38.56.8a6.89,6.89,0,0,0-.52,1.77,10.91,10.91,0,0,0,.65,7.92c.36.59,1.21,1.89,2.34,1.4s.78-1.77,1.07-2.95c.07-.28,0-.47.16-.66v.05c.31.66.63,1.29.92,1.95a12.89,12.89,0,0,0,2.9,3.16c.53.43,1,1.16,1.63,1.42v-.07h-.05c-.13-.22-.33-.31-.51-.48a11,11,0,0,1-1.16-1.41,29.71,29.71,0,0,1-2.5-4.29c-.36-.73-.67-1.53-1-2.27-.14-.28-.14-.7-.36-.84a8.42,8.42,0,0,0-1.07,1.6,13.81,13.81,0,0,0-.62,3.56c-.09,0-.05,0-.09.05-.72-.19-1-1-1.23-1.63a10.76,10.76,0,0,1-.2-6.3c.15-.49.82-2,.56-2.52s-.58-.71-.83-1.06a9.48,9.48,0,0,1-.8-1.51c-.54-1.32-.81-2.78-1.39-4.1A13.22,13.22,0,0,0,477,299.7a10.53,10.53,0,0,1-1.23-1.84c-.11-.26-.27-.68-.09-1a.36.36,0,0,1,.31-.31c.29-.26,1.12.07,1.41.21a11.92,11.92,0,0,1,2.21,1.18c.31.24.64.69,1.05.8h.47c.71.17,1.51.05,2.18.26a13.71,13.71,0,0,1,3.22,1.63,20.61,20.61,0,0,1,7,8.06c.27.55.38,1,.62,1.61.47,1.15,1.05,2.33,1.52,3.46a15.84,15.84,0,0,0,1.59,3.16c.33.5,1.67.76,2.27,1a14.26,14.26,0,0,1,1.54.66c.76.49,1.52,1.06,2.24,1.6.35.28,1.47.87,1.53,1.34Z" transform="translate(-72.46 -146.21)" fill="#010101" fill-rule="evenodd"/>
+    <path d="M482.08,301.09a3.29,3.29,0,0,0-.91.12v.05h0a7.8,7.8,0,0,0,.71,1c.18.37.34.75.52,1.13l0-.05a1.37,1.37,0,0,0,.47-1.18c-.13-.16-.16-.33-.27-.49S482.26,301.28,482.08,301.09ZM458.24,339.2h8.4a6,6,0,0,0,2.67-.59,2.76,2.76,0,0,0,1.88-2.53v-2.26c0-.87-.69-1.7-2.08-2.26a6.74,6.74,0,0,0-2.47-.45h-3.53c-1.18,0-1.74-.38-1.9-1.2a1.42,1.42,0,0,1,0-.29v-1.39a1.28,1.28,0,0,1,0-.26c.16-.63.47-.8,1.5-.92h8.59V325h-8.17a7.07,7.07,0,0,0-2.36.26c-1.72.57-2.48,1.47-2.48,3v1.8c0,1.39,1.47,2.57,4,2.85.27,0,.56,0,.85,0h3a1.12,1.12,0,0,1,.32,0c.91.09,1.31.26,1.58.61a.72.72,0,0,1,.22.56V336a1.06,1.06,0,0,1-.4.73,2,2,0,0,1-1.25.42c-.11,0-.18,0-.29,0h-8.06Zm31.12-3.56q0,3.15,4.48,3.51c.29,0,.56.05.85.05h7.59v-2.05h-7.66c-1.69,0-2.34-.45-2.34-1.54V325h-2.92v10.64Zm-16.32.09v-7.31c0-1.86,1.25-3,3.68-3.35.27,0,.54,0,.78,0H483c.29,0,.54,0,.82,0,2.44.36,3.67,1.49,3.67,3.35v7.31a2.7,2.7,0,0,1-1.72,2.85l2.85,2.74h-3.37L483,339.1l-2.34.14H477.5a6.44,6.44,0,0,1-1.69-.23c-1.85-.54-2.77-1.58-2.77-3.28Zm3.15-.16a2,2,0,0,0,.06.3c.16.85.92,1.32,2.08,1.32H481l-2.41-2.31h3.37l2.12,2a1.47,1.47,0,0,0,.74-1,1.56,1.56,0,0,0,0-.31v-7a1.32,1.32,0,0,0,0-.28c-.16-.8-.92-1.25-2-1.25h-4.4c-1.29,0-2.14.59-2.14,1.53v7Zm27.43,3.65H504V337.5h.56v-.35H503v.35h.58v1.72Zm3.23,0h.4v-2.07h-.6l-.49,1.41-.53-1.41H505v2.07h.39v-1.58h0l.55,1.58h.29l.56-1.58Z" transform="translate(-72.46 -146.21)" fill="#010101" fill-rule="evenodd"/>
+  </g>
+</svg>
+
+	   </section>
+        
+     <section>
+		 <p>Choosing Responsible Worker<p>
+		 <ul>
+			 <li>Hash SKU of the item</li>
+		   <li>Spread hash by deving number of workers</li>
+			 <li>Every worker connected to each other</li>
+			 <li>Each worker uses MySQL lock</li>
+		 </ul>
+	 </section>
+	 
+    <section>
+		 <h3>Results</h3>
+		 <ul>
+			   <li class="fragment">Zero deadlocks related to stock in server log</li>
+			   <li class="fragment">Customer didn't comaplain about inconsistency</li>
+			   <li class="fragment">Single write worker for each stock</li>
+			   <li class="fragment">Supports 3000 concurrent stock deductions</li>
+		 </ul>
+	 </section>
+	 
+	 <section>
+	   <h3>Built With</h3>
+	   <p>ReactPHP HTTP Server</p><p><a href="https://github.com/reactphp/http">https://github.com/reactphp/http</a></p>
+		 <p>ReactPHP MySQL connector</p> <p><a href="https://github.com/friends-of-reactphp/mysql">https://github.com/friends-of-reactphp/mysql</a></p>
+	 </section>
+        
+	   <section>
+         <h1 class="fragment current-visible" data-fragment-index="0">Thank You</h1>
+            <h2 class="fragment" data-fragment-index="2">Q&amp;A</h2>
+            <p class="fragment twitter" data-fragment-index="2">@IvanChepurnyi</p>
+            <p class="fragment email" data-fragment-index="2">ivan@ecomdev.org</p>
+       </section>
+       
+       
+              
+    </div>
+</div>
+
+
+
+<script>
+	addJs('/lib/js/head.min.js');
+	addJs('/js/reveal.js', function () {
+		// Full list of configuration options available at:
+		// https://github.com/hakimel/reveal.js#configuration
+		Reveal.initialize({
+			controls: true,
+			progress: true,
+			history: true,
+			center: false,
+			transition: 'convex', // none/fade/slide/convex/concave/zoom
+			keyboard: {
+				66: 'toggleOverview',
+				33: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateLeft();
+					}
+					
+					return Reveal.navigatePrev();
+				},
+				34: function () {
+					if (Reveal.isOverview()) {
+						return Reveal.navigateRight();
+					}
+					
+					return Reveal.navigateNext();
+				}
+			},
+			// Optional reveal.js plugins
+			dependencies: [
+				{ src: baseUrl + '/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+				{ src: baseUrl + '/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+				{ src: baseUrl + '/plugin/zoom-js/zoom.js', async: true },
+				{ src: baseUrl + '/plugin/notes/notes.js', async: true }
+			]
+		});
+		
+		var fixZoom = function () {
+			var footer = document.querySelector('.reveal > footer');
+			var slides = document.querySelector('.reveal > .slides');
+			if (footer && slides) {
+				if (slides.style.zoom) {
+					footer.style.zoom = slides.style.zoom;
+				} else if (slides.style.transform) {
+					footer.style.transform = slides.style.transform.replace(/translate\([^\)]+\)/, '');
+				}	
+			}
+		}
+		
+		Reveal.addEventListener('slidechanged', function () {
+			fixZoom();
+		});
+		
+		Reveal.addEventListener('ready', function () {
+			var slides = document.querySelectorAll('.reveal section');
+			for (var i in slides) {		
+				var slide = slides.item(i);
+				
+				if (slide.classList.contains('title-slide')) {
+					continue;
+				}
+				
+				slide.classList.add('center');
+			}
+			fixZoom();
+		});
+	});
+</script>
+
+</body>
+</html>
